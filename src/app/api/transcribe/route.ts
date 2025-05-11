@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Readable } from "stream";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route"; // adjust path as needed
+import { authOptions } from "../auth/[...nextauth]/route";
 
 const prisma = new PrismaClient();
 
@@ -22,7 +21,8 @@ export async function POST(req: NextRequest) {
 
   const buffer = Buffer.from(await audio.arrayBuffer());
 
-  const openaiRes = await fetch(
+  // 🧠 Step 1: Transcribe using Whisper
+  const openaiTranscribe = await fetch(
     "https://api.openai.com/v1/audio/transcriptions",
     {
       method: "POST",
@@ -42,8 +42,8 @@ export async function POST(req: NextRequest) {
     }
   );
 
-  const data = await openaiRes.json();
-  const text = data.text;
+  const transcriptionData = await openaiTranscribe.json();
+  const text = transcriptionData.text;
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
@@ -53,6 +53,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
+  // 💾 Step 2: Save transcript to DB
   const savedTranscript = await prisma.transcript.create({
     data: {
       userId: user.id,
@@ -60,5 +61,40 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({ text: data.text });
+  // 🧠 Step 3: Generate summary with OpenAI
+  const summaryPrompt = `
+  Summarize the following transcript into clear, concise bullet point notes.
+  Focus on main ideas, decisions, or any key points:
+
+  "${text}"
+  `;
+
+  const summaryRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY!}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: summaryPrompt }],
+    }),
+  });
+
+  const summaryData = await summaryRes.json();
+  const summaryText =
+    summaryData.choices?.[0]?.message?.content || "No summary generated.";
+
+  // 💾 Step 4: Save summary linked to transcript
+  await prisma.summary.create({
+    data: {
+      transcriptId: savedTranscript.id,
+      summaryText,
+    },
+  });
+
+  return NextResponse.json({
+    text,
+    summary: summaryText,
+  });
 }

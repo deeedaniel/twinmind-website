@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import SignInButton from "./components/SignIn";
 
 export default async function Home() {
   const session = await getServerSession();
@@ -20,8 +21,7 @@ export default async function Home() {
             height={100}
             className=""
           />
-          <button>Login</button>
-          <button>Sign-up</button>
+          <SignInButton />
         </div>
       </div>
     </>

@@ -8,6 +8,10 @@ type Transcript = {
   text: string;
   createdAt: string;
   userId: string;
+  summary?: {
+    id: string;
+    summaryText: string;
+  };
 };
 
 type CalendarEvent = {
@@ -17,6 +21,12 @@ type CalendarEvent = {
     dateTime?: string;
     date?: string;
   };
+};
+
+type Summary = {
+  id: string;
+  text: string;
+  createdAt: string;
 };
 
 export default function CaptureClient() {
@@ -31,6 +41,7 @@ export default function CaptureClient() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isCalendarLoading, setIsCalendarLoading] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
+  const [summaries, setSummaries] = useState<Summary[]>([]);
 
   useEffect(() => {
     const fetchTranscripts = async () => {
@@ -72,6 +83,31 @@ export default function CaptureClient() {
         }
       };
       fetchEvents();
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const fetchSummaries = async () => {
+      try {
+        const res = await fetch("/api/transcript");
+        const transcripts = await res.json();
+
+        const summaries = transcripts
+          .filter((t: Transcript) => t.summary)
+          .map((t: Transcript) => ({
+            id: t.summary!.id,
+            text: t.summary!.summaryText,
+            createdAt: t.createdAt,
+          }));
+
+        setSummaries(summaries);
+      } catch (err) {
+        console.error("Error fetching summaries:", err);
+      }
+    };
+
+    if (activeTab === "summaries") {
+      fetchSummaries(); // only fetch when the tab is active
     }
   }, [activeTab]);
 
@@ -184,7 +220,21 @@ export default function CaptureClient() {
                   ))}
               </div>
             )}
-            {activeTab === "summaries" && <p>Summaries.</p>}
+            {activeTab === "summaries" && (
+              <ul>
+                {summaries.map((s) => (
+                  <li
+                    key={s.id}
+                    className="p-4 bg-white rounded-lg shadow mb-4"
+                  >
+                    <p className="text-sm text-gray-600">
+                      {new Date(s.createdAt).toLocaleString()}
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap">{s.text}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {transcript && (
