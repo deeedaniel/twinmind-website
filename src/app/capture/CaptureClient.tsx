@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Mic, CircleStop } from "lucide-react";
+import { Mic, CircleStop, Search } from "lucide-react";
 
 type Transcript = {
   id: string;
@@ -269,22 +269,39 @@ export default function CaptureClient() {
               </div>
             )}
 
-            {/* Capture buttons */}
-            {isRecording ? (
-              <button
-                onClick={stopRecording}
-                className="fixed bottom-14 left-1/2 -translate-x-1/2 flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full px-4 py-2 gap-4 font-semibold shadow-md"
-              >
-                <CircleStop /> Stop
-              </button>
-            ) : (
-              <button
-                onClick={startRecording}
-                className="fixed bottom-14 left-1/2 -translate-x-1/2 flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-4 py-2 gap-4 font-semibold hover:scale-110 transition-all duration-300 shadow-md"
-              >
-                <Mic /> Capture
-              </button>
-            )}
+            {/* Ask All Memories button */}
+            <div className="fixed bottom-14 left-1/2 -translate-x-1/2 gap-4 grid grid-cols-2">
+              <div className="relative w-full max-w-md">
+                <input
+                  type="text"
+                  placeholder="Ask All Memories"
+                  className="w-full pr-10 bg-[#e8edee] text-[#0b4f75] rounded-full px-4 py-2 font-semibold shadow-md border-2 border-[#c8d1dd] transition-all duration-300"
+                />
+                <button>
+                  <Search
+                    className="absolute right-5 top-1/2 transform -translate-y-1/2 text-[#0b4f75] cursor-pointer"
+                    size={20}
+                  />
+                </button>
+              </div>
+
+              {/* Capture buttons */}
+              {isRecording ? (
+                <button
+                  onClick={stopRecording}
+                  className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full px-4 py-2 gap-4 font-semibold shadow-md"
+                >
+                  <CircleStop /> Stop
+                </button>
+              ) : (
+                <button
+                  onClick={startRecording}
+                  className=" flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-4 py-2 gap-4 font-semibold hover:scale-110 transition-all duration-300 shadow-md"
+                >
+                  <Mic /> Capture
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
