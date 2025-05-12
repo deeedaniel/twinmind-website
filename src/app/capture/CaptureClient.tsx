@@ -183,7 +183,7 @@ export default function CaptureClient() {
         </div>
 
         {/* Mapping content for each tab */}
-        <div className="pt-24 flex items-center justify-center">
+        <div className="pt-28 flex items-center justify-center">
           <div className="flex flex-col items-center">
             <div className="">
               {/* Memories tab */}
@@ -263,9 +263,9 @@ export default function CaptureClient() {
 
             {/* Transcript */}
             {transcript && (
-              <div className="mt-4 w-[800px]">
-                <p className="font-bold">Transcript:</p>
-                <p>{transcript}</p>
+              <div className="fixed top-24 right-8 w-[300px] bg-white rounded-lg shadow-lg p-4">
+                <p className="font-bold text-[#0b4f75] mb-2">Transcript:</p>
+                <p className="text-sm">{transcript}</p>
               </div>
             )}
 
@@ -273,14 +273,14 @@ export default function CaptureClient() {
             {isRecording ? (
               <button
                 onClick={stopRecording}
-                className="fixed bottom-14 left-1/2 -translate-x-1/2 flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full px-4 py-2 gap-4 font-semibold"
+                className="fixed bottom-14 left-1/2 -translate-x-1/2 flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full px-4 py-2 gap-4 font-semibold shadow-md"
               >
                 <CircleStop /> Stop
               </button>
             ) : (
               <button
                 onClick={startRecording}
-                className="fixed bottom-14 left-1/2 -translate-x-1/2 flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-4 py-2 gap-4 font-semibold hover:scale-110 transition-all duration-300"
+                className="fixed bottom-14 left-1/2 -translate-x-1/2 flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-4 py-2 gap-4 font-semibold hover:scale-110 transition-all duration-300 shadow-md"
               >
                 <Mic /> Capture
               </button>

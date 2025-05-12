@@ -23,7 +23,7 @@ export default function NavMenu() {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-[#1a1a1a] text-white p-6 transition-transform duration-300 z-40 rounded-r-3xl flex flex-col items-center justify-center ${
+        className={`fixed top-0 left-0 h-full w-64 bg-[#1a1a1a] text-white p-6 transition-transform duration-300 z-40 rounded-r-3xl flex flex-col items-center justify-center shadow-lg ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
