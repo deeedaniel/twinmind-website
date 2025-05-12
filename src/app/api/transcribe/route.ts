@@ -85,11 +85,19 @@ export async function POST(req: NextRequest) {
   const summaryText =
     summaryData.choices?.[0]?.message?.content || "No summary generated.";
 
+  // Extract title from summary text (first line or first few words)
+  const summaryTitle =
+    summaryText
+      .split("\n")[0]
+      .replace(/^[-\s]*/, "")
+      .slice(0, 50) || "Untitled Summary";
+
   // 💾 Step 4: Save summary linked to transcript
   await prisma.summary.create({
     data: {
       transcriptId: savedTranscript.id,
       summaryText,
+      summaryTitle,
     },
   });
 

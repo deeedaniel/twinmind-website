@@ -11,6 +11,7 @@ type Transcript = {
   summary?: {
     id: string;
     summaryText: string;
+    summaryTitle: string;
   };
 };
 
@@ -101,6 +102,7 @@ export default function CaptureClient() {
           .map((t: Transcript) => ({
             id: t.summary!.id,
             text: t.summary!.summaryText,
+            title: t.summary!.summaryTitle,
             createdAt: t.createdAt,
           }));
 
@@ -246,6 +248,9 @@ export default function CaptureClient() {
                       key={s.id}
                       className="p-4 bg-white rounded-lg shadow mb-4 w-[600px]"
                     >
+                      <h3 className="text-lg font-semibold text-[#0b4f75] mb-2">
+                        {s.title}
+                      </h3>
                       <p className="text-sm text-gray-600">
                         {new Date(s.createdAt).toLocaleString()}
                       </p>
@@ -258,7 +263,7 @@ export default function CaptureClient() {
 
             {/* Transcript */}
             {transcript && (
-              <div className="mt-4">
+              <div className="mt-4 w-[800px]">
                 <p className="font-bold">Transcript:</p>
                 <p>{transcript}</p>
               </div>
