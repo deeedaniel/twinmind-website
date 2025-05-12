@@ -26,9 +26,16 @@ export async function POST(req: NextRequest) {
   }
 
   const prompt = `
-  Summarize the following audio transcript into clean, concise bullet point notes. Only include key takeaways or actions:
-  "${transcript.text}"
-  `;
+You will receive an audio transcript. First, generate a short and relevant title (5–8 words) that summarizes the overall topic or intent. Then, provide clean, concise bullet point notes with key takeaways or actions. Format your response like this:
+
+Title: [Your title here]
+
+- Bullet 1
+- Bullet 2
+
+Transcript:
+"${transcript.text}"
+`;
 
   const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -44,13 +51,18 @@ export async function POST(req: NextRequest) {
 
   const data = await openaiRes.json();
   const summaryText = data.choices[0].message.content;
+  const summaryTitle = data.choices[0].message.content
+    .split("\n")[0]
+    .split(":")[1]
+    .trim();
 
   const saved = await prisma.summary.upsert({
     where: { transcriptId },
-    update: { summaryText },
+    update: { summaryText, summaryTitle },
     create: {
       transcriptId,
       summaryText,
+      summaryTitle,
     },
   });
 
