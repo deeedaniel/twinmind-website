@@ -13,7 +13,7 @@ export default function NavMenu() {
     <>
       {/* Sidebar button */}
       <button
-        className={`fixed top-4 left-4 z-50 bg-[#ff7500] text-white px-2 py-2 rounded-xl transition-all duration-300 hover:bg-[#faaa6b] ${
+        className={`fixed top-4 left-4 z-50 bg-[#ff7500] text-white px-2 py-2 rounded-xl transition-all duration-300 hover:bg-[#faaa6b] cursor-pointer shadow-md ${
           isOpen ? "left-48" : "left-4"
         }`}
         onClick={() => setIsOpen(!isOpen)}
@@ -55,7 +55,7 @@ export default function NavMenu() {
 
             <button
               onClick={() => signOut()}
-              className="mt-4 px-10 py-2 text-red-500 border-2 border-red-500 bg-white hover:text-red-900 hover:border-red-900 rounded-full flex  gap-2 transition-all duration-300"
+              className="mt-4 px-10 py-2 text-red-500 border-2 border-red-500 bg-white hover:text-red-900 hover:border-red-900 rounded-full flex  gap-2 transition-all duration-300 cursor-pointer"
             >
               <LogOut /> Sign out
             </button>
