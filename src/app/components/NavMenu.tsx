@@ -3,7 +3,12 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import Image from "next/image";
 import { useState } from "react";
-import { SquareArrowRight, SquareArrowLeft, LogOut } from "lucide-react";
+import {
+  SquareArrowRight,
+  SquareArrowLeft,
+  LogOut,
+  ChevronRight,
+} from "lucide-react";
 
 export default function NavMenu() {
   const { data: session } = useSession();
@@ -51,6 +56,50 @@ export default function NavMenu() {
               <p className="text-sm text-gray-200 mb-4">
                 {session?.user?.email}
               </p>
+            </div>
+
+            <div>
+              <p>Support</p>
+              <div className="flex flex-col gap-2 ml-5 mt-2">
+                <a
+                  href="https://twinmind.com/contact"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  Chat with Support <ChevronRight />
+                </a>
+                <a
+                  href="https://discord.com/invite/nb9bMfXtGT"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  Discord <ChevronRight />
+                </a>
+              </div>
+            </div>
+
+            <div>
+              <p>Other</p>
+              <div className="flex flex-col gap-2 ml-5 mt-2">
+                <a
+                  href="https://twinmind.com/legal/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  Privacy Policy <ChevronRight />
+                </a>
+                <a
+                  href="https://twinmind.com/legal/terms-of-service"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  Terms of Service <ChevronRight />
+                </a>
+              </div>
             </div>
 
             <button

@@ -51,6 +51,8 @@ export default function CaptureClient() {
   const [selected, setSelected] = useState<Transcript | null>(null);
   const [modalTab, setModalTab] = useState<"summary" | "transcript">("summary");
 
+  const modalRef = useRef<HTMLDivElement>(null);
+
   // Calling api to fetching transcripts
   /*
   useEffect(() => {
@@ -252,6 +254,22 @@ export default function CaptureClient() {
     }
   };
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
+        setSelected(null); // close modal
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <>
       <div className="min-h-screen">
@@ -307,7 +325,7 @@ export default function CaptureClient() {
                                 </span>
                               </div>
                               <span className="font-medium text-gray-800 truncate">
-                                {entry.summary?.summaryText?.slice(0, 30) ||
+                                {entry.summary?.summaryTitle ||
                                   "Untitled Memory"}
                               </span>
                             </div>
@@ -320,7 +338,10 @@ export default function CaptureClient() {
                   {/* Modal */}
                   {selected && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
-                      <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-lg flex flex-col gap-4">
+                      <div
+                        ref={modalRef}
+                        className="bg-white w-full max-w-md p-6 rounded-xl shadow-lg flex flex-col gap-4"
+                      >
                         <div className="text-right">
                           <button
                             onClick={() => setSelected(null)}
@@ -332,7 +353,7 @@ export default function CaptureClient() {
 
                         <div>
                           <h3 className="text-xl font-bold mb-2 text-[#0b4f75]">
-                            {selected.summary?.summaryText?.slice(0, 40) ||
+                            {selected.summary?.summaryTitle ||
                               "Untitled Memory"}
                           </h3>
                           <p className="text-sm text-[#909090] mb-4 font-semibold">
