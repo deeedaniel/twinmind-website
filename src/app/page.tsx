@@ -21,8 +21,14 @@ export default async function Home() {
             width={150}
             height={150}
           />
-          <div className="flex items-center justify-center bg-[#ff7500] text-white rounded-full px-4 py-2 gap-4 font-semibold hover:scale-110 hover:bg-[#faaa6b] transition-all duration-300 cursor-pointer">
-            <LogIn className="w-8 h-8" />
+          <p className="text-2xl font-bold">Welcome to TwinMind!</p>
+          <p className="text-sm text-gray-500 bg-gray-100 rounded-xl p-4">
+            Sign in to access your personal AI assistant and
+            <br />
+            start exploring the power of TwinMind!
+          </p>
+          <div className="flex items-center justify-center bg-[#ff7500] text-white rounded-full px-5 py-2 gap-4 font-semibold hover:scale-110 hover:bg-[#faaa6b] transition-all duration-300 cursor-pointer">
+            <LogIn className="w-5 h-5" />
             <SignInButton />
           </div>
           <div className="flex flex-row items-center gap-24 absolute bottom-10">

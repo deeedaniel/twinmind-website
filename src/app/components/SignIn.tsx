@@ -6,7 +6,7 @@ export default function SignInButton() {
   return (
     <>
       <button className="cursor-pointer" onClick={() => signIn()}>
-        Sign In
+        Let's Go!
       </button>
     </>
   );
