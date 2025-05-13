@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Mic, CircleStop, Search } from "lucide-react";
+import { Mic, CircleStop, Search, ChevronLeft } from "lucide-react";
+import { format } from "date-fns";
 
 type Transcript = {
   id: string;
@@ -45,8 +46,13 @@ export default function CaptureClient() {
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [summaries, setSummaries] = useState<Summary[]>([]);
   const [transcriptText, setTranscriptText] = useState("");
+  const [data, setData] = useState<Transcript[]>([]);
+  const [grouped, setGrouped] = useState<Record<string, Transcript[]>>({});
+  const [selected, setSelected] = useState<Transcript | null>(null);
+  const [modalTab, setModalTab] = useState<"summary" | "transcript">("summary");
 
   // Calling api to fetching transcripts
+  /*
   useEffect(() => {
     const fetchTranscripts = async () => {
       try {
@@ -66,6 +72,29 @@ export default function CaptureClient() {
 
     fetchTranscripts();
   }, []);
+  */
+
+  useEffect(() => {
+    fetch("/api/transcript")
+      .then((res) => res.json())
+      .then((transcripts) => {
+        setData(transcripts);
+        const groupedByDate = transcripts.reduce(
+          (acc: any, item: Transcript) => {
+            const date = new Date(item.createdAt).toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            });
+            acc[date] = acc[date] || [];
+            acc[date].push(item);
+            return acc;
+          },
+          {}
+        );
+        setGrouped(groupedByDate);
+      });
+  }, []);
 
   // Calling api to fetch calendar events
   useEffect(() => {
@@ -75,7 +104,10 @@ export default function CaptureClient() {
           setIsCalendarLoading(true);
           setCalendarError(null);
           const res = await fetch("/api/calendar");
-          if (!res.ok) throw new Error("Failed to fetch calendar events");
+          if (!res.ok)
+            throw new Error(
+              "Failed to fetch calendar events. Please re-login!"
+            );
           const data = await res.json();
           setEvents(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -91,7 +123,23 @@ export default function CaptureClient() {
     }
   }, [activeTab]);
 
+  const groupedEvents = events.reduce((acc: any, event) => {
+    const rawDate = event.start?.dateTime || event.start?.date;
+    if (!rawDate) return acc;
+
+    const date = new Date(rawDate).toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+
+    acc[date] = acc[date] || [];
+    acc[date].push(event);
+    return acc;
+  }, {});
+
   // Calling api to fetch summaries
+  /*
   useEffect(() => {
     const fetchSummaries = async () => {
       try {
@@ -117,6 +165,7 @@ export default function CaptureClient() {
       fetchSummaries(); // only fetch when the tab is active
     }
   }, [activeTab]);
+  */
 
   // Start recording function
   const startRecording = async () => {
@@ -210,7 +259,7 @@ export default function CaptureClient() {
         <div className="fixed top-14 left-1/2 -translate-x-1/2 bg-white z-10 shadow-sm rounded-xl">
           <div className="max-w-4xl mx-auto px-2 py-2">
             <div className="flex justify-center space-x-20">
-              {["memories", "calendar", "summaries"].map((tab) => (
+              {["memories", "calendar", "questions"].map((tab) => (
                 <button
                   key={tab}
                   className={`w-[150px] transition-all${
@@ -228,10 +277,113 @@ export default function CaptureClient() {
         </div>
 
         {/* Mapping content for each tab */}
+
         <div className="pt-28 flex items-center justify-center">
           <div className="flex flex-col items-center">
             <div className="">
               {/* Memories tab */}
+
+              {activeTab === "memories" && (
+                <div className="p-4">
+                  {Object.entries(grouped).map(([date, entries]) => (
+                    <div key={date} className="mb-6 w-[600px]">
+                      <h2 className="text-lg font-bold text-[#646464]">
+                        {date}
+                      </h2>
+                      <div className="space-y-2 mt-2">
+                        {entries.map((entry) => (
+                          <div
+                            key={entry.id}
+                            className="cursor-pointer shadow-sm bg-white px-4 py-2 rounded-lg hover:bg-gray-100"
+                            onClick={() => setSelected(entry)}
+                          >
+                            <div className="flex gap-6 items-center">
+                              <div className="flex flex-col items-center">
+                                <span className="text-sm text-gray-500">
+                                  {format(new Date(entry.createdAt), "h:mm")}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  {format(new Date(entry.createdAt), "aaa")}
+                                </span>
+                              </div>
+                              <span className="font-medium text-gray-800 truncate">
+                                {entry.summary?.summaryText?.slice(0, 30) ||
+                                  "Untitled Memory"}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Modal */}
+                  {selected && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
+                      <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-lg flex flex-col gap-4">
+                        <div className="text-right">
+                          <button
+                            onClick={() => setSelected(null)}
+                            className="text-[#4386a6] hover:underline cursor-pointer flex items-center gap-2 "
+                          >
+                            <ChevronLeft /> Back
+                          </button>
+                        </div>
+
+                        <div>
+                          <h3 className="text-xl font-bold mb-2 text-[#0b4f75]">
+                            {selected.summary?.summaryText?.slice(0, 40) ||
+                              "Untitled Memory"}
+                          </h3>
+                          <p className="text-sm text-[#909090] mb-4 font-semibold">
+                            {format(
+                              new Date(selected.createdAt),
+                              "MMM d, yyyy '·' h:mmaaa"
+                            )}
+                          </p>
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="flex mb-2 space-x-4">
+                          <button
+                            onClick={() => setModalTab("summary")}
+                            className={`px-4 py-1 rounded-full ${
+                              modalTab === "summary"
+                                ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                                : "bg-[#eeeeee] text-[#656565]"
+                            }`}
+                          >
+                            Summary
+                          </button>
+                          <button
+                            onClick={() => setModalTab("transcript")}
+                            className={`px-4 py-1 rounded-full ${
+                              modalTab === "transcript"
+                                ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                                : "bg-[#eeeeee] text-[#656565]"
+                            }`}
+                          >
+                            Transcript
+                          </button>
+                        </div>
+
+                        {modalTab === "summary" ? (
+                          <p className="text-gray-800 whitespace-pre-wrap">
+                            {selected.summary?.summaryText ||
+                              "No summary available."}
+                          </p>
+                        ) : (
+                          <p className="text-gray-800 whitespace-pre-wrap">
+                            {selected.text}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/*
               {activeTab === "memories" && (
                 <>
                   {isLoading && <p>Loading transcripts...</p>}
@@ -253,8 +405,56 @@ export default function CaptureClient() {
                   )}
                 </>
               )}
+              */}
 
               {/* Calendar tab */}
+              {activeTab === "calendar" && (
+                <div className="p-4">
+                  {isCalendarLoading && <p>Loading calendar events...</p>}
+                  {calendarError && (
+                    <p className="text-red-500">{calendarError}</p>
+                  )}
+                  {!isCalendarLoading &&
+                    !calendarError &&
+                    Object.keys(groupedEvents).length === 0 && (
+                      <p>No upcoming events</p>
+                    )}
+                  {!isCalendarLoading &&
+                    !calendarError &&
+                    Object.entries(groupedEvents).map(([date, events]) => (
+                      <div key={date} className="mb-6 w-[600px]">
+                        <h2 className="text-lg font-bold text-[#646464]">
+                          {date}
+                        </h2>
+                        <div className="space-y-2 mt-2">
+                          {events.map((event) => {
+                            const start =
+                              event.start?.dateTime || event.start?.date;
+                            const parsed = new Date(start || "");
+                            return (
+                              <div
+                                key={event.id}
+                                className="shadow-sm bg-white px-4 py-2 rounded-lg flex gap-6 items-center"
+                              >
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-gray-800 truncate">
+                                    {event.summary || "Untitled Event"}
+                                  </span>
+                                  <div>
+                                    <span className="text-sm text-gray-500">
+                                      {format(parsed, "h:mmaaa")}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+              {/*
               {activeTab === "calendar" && (
                 <div className="space-y-4">
                   {isCalendarLoading && <p>Loading calendar events...</p>}
@@ -284,9 +484,19 @@ export default function CaptureClient() {
                     ))}
                 </div>
               )}
+                              */}
 
               {/* Summaries tab */}
-              {activeTab === "summaries" && (
+
+              {activeTab === "questions" && (
+                <div className="p-4">
+                  <p className="text-lg font-bold text-[#0b4f75]">
+                    Coming Soon!
+                  </p>
+                </div>
+              )}
+
+              {/* Previous inside of questions tab
                 <ul>
                   {summaries.map((s) => (
                     <li
@@ -303,7 +513,7 @@ export default function CaptureClient() {
                     </li>
                   ))}
                 </ul>
-              )}
+                */}
             </div>
 
             {/* Transcript */}

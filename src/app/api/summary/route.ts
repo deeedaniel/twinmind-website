@@ -63,12 +63,6 @@ Transcript:
     .join("\n") // join remaining lines back into text
     .trim(); // clean up whitespace
 
-  // Take only title
-  const summaryTitle = data.choices[0].message.content
-    .split("\n")[0]
-    .split(":")[1]
-    .trim();
-
   const saved = await prisma.summary.upsert({
     where: { transcriptId },
     update: { summaryText, summaryTitle },
