@@ -5,6 +5,7 @@ import { authOptions } from "../auth/[...nextauth]/route";
 
 const prisma = new PrismaClient();
 
+// Summarizes the transcript and saves it to the database
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
@@ -50,7 +51,19 @@ Transcript:
   });
 
   const data = await openaiRes.json();
-  const summaryText = data.choices[0].message.content;
+  const fullContent = data.choices[0].message.content;
+
+  const summaryTitle =
+    fullContent.split("\n")[0]?.split(":")[1]?.trim() || "Untitled";
+
+  // Remove title from text
+  const summaryText = fullContent
+    .split("\n") // split into lines
+    .slice(1) // skip the first line (the title)
+    .join("\n") // join remaining lines back into text
+    .trim(); // clean up whitespace
+
+  // Take only title
   const summaryTitle = data.choices[0].message.content
     .split("\n")[0]
     .split(":")[1]

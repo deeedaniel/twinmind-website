@@ -44,6 +44,7 @@ export default function CaptureClient() {
   const [isCalendarLoading, setIsCalendarLoading] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [summaries, setSummaries] = useState<Summary[]>([]);
+  const [transcriptText, setTranscriptText] = useState("");
 
   // Calling api to fetching transcripts
   useEffect(() => {
@@ -124,6 +125,9 @@ export default function CaptureClient() {
 
     audioChunksRef.current = [];
 
+    // Every 30 seconds, stop and restart the recorder
+    let chunkInterval: NodeJS.Timeout;
+
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
         audioChunksRef.current.push(e.data);
@@ -144,18 +148,59 @@ export default function CaptureClient() {
       });
 
       const data = await res.json();
-      setTranscript(data.text);
+      setTranscript((prev) => prev + " " + data.text); // still shows in UI
+      setTranscriptText((prev) => prev + " " + data.text); // NEW: accumulate for DB
+
+      // Clear previous chunk
+      audioChunksRef.current = [];
+
+      // Restart recording
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      mediaRecorderRef.current.ondataavailable = mediaRecorder.ondataavailable;
+      mediaRecorderRef.current.onstop = mediaRecorder.onstop;
+      mediaRecorderRef.current.start();
     };
 
+    // Start initial recording
     mediaRecorder.start();
     mediaRecorderRef.current = mediaRecorder;
     setIsRecording(true);
+
+    // Auto-stop & restart every 30 seconds
+    chunkInterval = setInterval(() => {
+      mediaRecorderRef.current?.stop();
+    }, 30_000);
+
+    // Stop interval when recording stops
+    (mediaRecorderRef.current as any).cleanup = () =>
+      clearInterval(chunkInterval);
   };
 
   // Stop recording function
-  const stopRecording = () => {
+  const stopRecording = async () => {
     mediaRecorderRef.current?.stop();
     setIsRecording(false);
+
+    if ((mediaRecorderRef.current as any)?.cleanup) {
+      (mediaRecorderRef.current as any).cleanup();
+    }
+
+    if (transcriptText.trim()) {
+      const res = await fetch("/api/save-transcript", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: transcriptText }),
+      });
+
+      const { transcriptId } = await res.json();
+
+      // ✅ Generate summary now
+      await fetch("/api/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcriptId }),
+      });
+    }
   };
 
   return (

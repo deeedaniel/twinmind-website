@@ -54,12 +54,16 @@ export async function POST(req: NextRequest) {
   }
 
   // 💾 Step 2: Save transcript to DB
+  /*
   const savedTranscript = await prisma.transcript.create({
     data: {
       userId: user.id,
       text,
     },
   });
+  */
+
+  /*
 
   // 🧠 Step 3: Generate summary with OpenAI
   const summaryPrompt = `
@@ -89,7 +93,7 @@ export async function POST(req: NextRequest) {
   const summaryTitle =
     summaryText
       .split("\n")[0]
-      .replace(/^[-\s]*/, "")
+      .replace(/^[-\s], "")
       .slice(0, 50) || "Untitled Summary";
 
   // 💾 Step 4: Save summary linked to transcript
@@ -101,8 +105,9 @@ export async function POST(req: NextRequest) {
     },
   });
 
+   */
+
   return NextResponse.json({
     text,
-    summary: summaryText,
   });
 }
