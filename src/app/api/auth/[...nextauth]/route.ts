@@ -42,10 +42,32 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (!existingUser) {
-          await prisma.user.create({
+          const newUser = await prisma.user.create({
             data: {
               email: user.email!,
               name: user.name,
+            },
+          });
+          await prisma.transcript.create({
+            data: {
+              userId: newUser.id,
+              text: `Hey there! Welcome to TwinMind. This is your first memory! We created this to show you how things work, you can record, reflect, ask questions, and get summaries based on what you record!`,
+              summary: {
+                create: {
+                  summaryTitle: "👋 Welcome to TwinMind!",
+                  summaryText: `
+    • This is your first TwinMind memory.
+    • You can record audio and get a summary.
+    • Ask questions later based on your past thoughts!
+    
+    Action Items:
+    1. Try recording your own thought now.
+    2. Ask a question like “What did I say yesterday?”
+    
+    P.S. (🤫 You can personalize your profile in the personalization in the sidebar.)
+                  `.trim(),
+                },
+              },
             },
           });
         }
