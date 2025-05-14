@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
   const transcript = await prisma.transcript.findUnique({
     where: { id: transcriptId },
-    select: { personalization: true } as any,
+    include: { user: true },
   });
 
   if (!transcript) {
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   }
 
   const prompt = `
-About the user: ${transcript.personalization || "None provided."}
+About the user: ${(transcript.user as any)?.personalization || "None provided."}
 
 You will receive an audio transcript. First, generate a short and relevant title (5–8 words) that summarizes the overall topic or intent. Then, provide clean, concise bullet point notes with key takeaways or actions. If deemed necessary, add Action Items at the end. Format your response like this:
 
