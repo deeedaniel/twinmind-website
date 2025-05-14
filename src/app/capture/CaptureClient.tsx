@@ -308,11 +308,11 @@ export default function CaptureClient() {
                       <h2 className="text-lg font-bold text-[#646464]">
                         {date}
                       </h2>
-                      <div className="space-y-2 mt-2">
+                      <div className="space-y-4 mt-2">
                         {entries.map((entry) => (
                           <div
                             key={entry.id}
-                            className="cursor-pointer shadow-sm bg-white px-4 py-2 rounded-lg hover:bg-gray-100"
+                            className="cursor-pointer shadow-sm bg-white px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:translate-x-1"
                             onClick={() => setSelected(entry)}
                           >
                             <div className="flex gap-6 items-center">
@@ -342,10 +342,10 @@ export default function CaptureClient() {
                         ref={modalRef}
                         className="bg-white w-full max-w-md p-6 rounded-xl shadow-lg flex flex-col gap-4"
                       >
-                        <div className="text-right">
+                        <div>
                           <button
                             onClick={() => setSelected(null)}
-                            className="text-[#4386a6] hover:underline cursor-pointer flex items-center gap-2 "
+                            className="text-[#4386a6] hover:underline cursor-pointer flex items-center gap-2 transition-all duration-300 hover:translate-x-1"
                           >
                             <ChevronLeft /> Back
                           </button>
@@ -368,7 +368,7 @@ export default function CaptureClient() {
                         <div className="flex mb-2 space-x-4">
                           <button
                             onClick={() => setModalTab("summary")}
-                            className={`px-4 py-1 rounded-full ${
+                            className={`px-4 py-1 rounded-full  cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
                               modalTab === "summary"
                                 ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
                                 : "bg-[#eeeeee] text-[#656565]"
@@ -378,7 +378,7 @@ export default function CaptureClient() {
                           </button>
                           <button
                             onClick={() => setModalTab("transcript")}
-                            className={`px-4 py-1 rounded-full ${
+                            className={`px-4 py-1 rounded-full cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
                               modalTab === "transcript"
                                 ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
                                 : "bg-[#eeeeee] text-[#656565]"
@@ -455,7 +455,7 @@ export default function CaptureClient() {
                             return (
                               <div
                                 key={event.id}
-                                className="shadow-sm bg-white px-4 py-2 rounded-lg flex gap-6 items-center"
+                                className="shadow-sm bg-white px-4 py-2 rounded-lg flex gap-6 items-center hover:bg-gray-100 transition-all duration-300"
                               >
                                 <div className="flex flex-col">
                                   <span className="font-medium text-gray-800 truncate">
@@ -565,14 +565,14 @@ export default function CaptureClient() {
               {isRecording ? (
                 <button
                   onClick={stopRecording}
-                  className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full px-4 py-2 gap-4 font-semibold shadow-md cursor-pointer hover:scale-110 transition-all duration-300"
+                  className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full px-4 py-2 gap-4 font-semibold shadow-md cursor-pointer hover:scale-105 transition-all duration-300"
                 >
                   <CircleStop /> Stop
                 </button>
               ) : (
                 <button
                   onClick={startRecording}
-                  className=" flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-4 py-2 gap-4 font-semibold hover:scale-110 transition-all duration-300 shadow-md cursor-pointer"
+                  className=" flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-4 py-2 gap-4 font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
                 >
                   <Mic /> Capture
                 </button>

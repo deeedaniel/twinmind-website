@@ -43,71 +43,86 @@ export default function NavMenu() {
                 className="mx-auto"
               />
 
-              {session?.user?.image && (
-                <Image
-                  src={session?.user?.image}
-                  alt="Profile picture"
-                  width={80}
-                  height={80}
-                  className="rounded-full mb-4"
-                />
-              )}
-              <p className="font-medium mb-1">{session?.user?.name}</p>
+              <div className="flex items-center gap-6">
+                {session?.user?.image && (
+                  <Image
+                    src={session?.user?.image}
+                    alt="Profile picture"
+                    width={60}
+                    height={60}
+                    className="rounded-full"
+                  />
+                )}
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <p className="font-medium">{session?.user?.name}</p>
+                  <button className="text-sm cursor-pointer hover:translate-x-1 transition-all duration-200">
+                    Manage Account
+                  </button>
+                </div>
+              </div>
+              {/* 
               <p className="text-sm text-gray-200 mb-4">
                 {session?.user?.email}
               </p>
+                */}
             </div>
 
-            <div>
-              <p>Support</p>
-              <div className="flex flex-col gap-2 ml-5 mt-2">
-                <a
-                  href="https://twinmind.com/contact"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  Chat with Support <ChevronRight />
-                </a>
-                <a
-                  href="https://discord.com/invite/nb9bMfXtGT"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  Discord <ChevronRight />
-                </a>
+            <div className="flex flex-col gap-20">
+              <div>
+                <p className="text-gray-200">Support</p>
+                <div className="flex flex-col gap-2 ml-5 mt-2 w-48">
+                  <a
+                    href="https://twinmind.com/contact"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex justify-between gap-2 transition-transform duration-200 hover:translate-x-1 text-gray-300"
+                  >
+                    <p>Chat with Support</p>
+                    <ChevronRight />
+                  </a>
+                  <a
+                    href="https://discord.com/invite/nb9bMfXtGT"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex justify-between gap-2 transition-transform duration-200 hover:translate-x-1 text-gray-300"
+                  >
+                    <p>Discord</p>
+                    <ChevronRight />
+                  </a>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <p>Other</p>
-              <div className="flex flex-col gap-2 ml-5 mt-2">
-                <a
-                  href="https://twinmind.com/legal/privacy-policy"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  Privacy Policy <ChevronRight />
-                </a>
-                <a
-                  href="https://twinmind.com/legal/terms-of-service"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  Terms of Service <ChevronRight />
-                </a>
+              <div>
+                <p className="text-gray-200">Other</p>
+                <div className="flex flex-col gap-2 ml-5 mt-2 w-48">
+                  <a
+                    href="https://twinmind.com/legal/privacy-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex justify-between gap-2 transition-transform duration-200 hover:translate-x-1 text-gray-300"
+                  >
+                    <p>Privacy Policy</p>
+                    <ChevronRight />
+                  </a>
+                  <a
+                    href="https://twinmind.com/legal/terms-of-service"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex justify-between gap-2 transition-transform duration-200 hover:translate-x-1 text-gray-300"
+                  >
+                    <p>Terms of Service</p>
+                    <ChevronRight />
+                  </a>
+                </div>
               </div>
-            </div>
 
-            <button
-              onClick={() => signOut()}
-              className="mt-4 px-10 py-2 text-red-500 border-2 border-red-500 bg-white hover:text-red-900 hover:border-red-900 rounded-full flex  gap-2 transition-all duration-300 cursor-pointer"
-            >
-              <LogOut /> Sign out
-            </button>
+              <button
+                onClick={() => signOut()}
+                className="mt-4 px-10 py-2 text-white  bg-[#ff454b] hover:bg-red-600  rounded-full flex  gap-2 transition-all duration-300 cursor-pointer"
+              >
+                <LogOut /> Sign out
+              </button>
+            </div>
           </div>
         </>
       </div>
