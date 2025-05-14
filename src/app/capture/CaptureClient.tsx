@@ -58,6 +58,10 @@ export default function CaptureClient() {
   const [selected, setSelected] = useState<Transcript | null>(null);
   const [modalTab, setModalTab] = useState<"summary" | "transcript">("summary");
   const [showFullTranscript, setShowFullTranscript] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResult, setSearchResult] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showAIAnswer, setShowAIAnswer] = useState(false);
 
   const shouldStopRef = useRef(false);
 
@@ -299,6 +303,30 @@ export default function CaptureClient() {
     };
   }, []);
 
+  // Search function (Ask all Memories)
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    setSearchLoading(true);
+    setSearchResult("");
+
+    try {
+      const res = await fetch("/api/rag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: searchQuery }),
+      });
+
+      const data = await res.json();
+      setSearchResult(data.answer);
+    } catch (err) {
+      console.error("Error searching:", err);
+      setSearchResult("Something went wrong. Please try again.");
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen">
@@ -369,7 +397,7 @@ export default function CaptureClient() {
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
                       <div
                         ref={modalRef}
-                        className="bg-white w-full max-w-md p-6 rounded-xl shadow-lg flex flex-col gap-4"
+                        className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4"
                       >
                         <div>
                           <button
@@ -568,35 +596,73 @@ export default function CaptureClient() {
                 */}
             </div>
 
-            {/* Transcript */}
-            {transcript && (
-              <div className="fixed bottom-32 left-1/2 -translate-x-1/2 w-[500px] bg-white rounded-xl shadow-lg p-4 border-1 border-[#c8d1dd]">
-                <div className="flex justify-between items-center">
-                  <p className="font-bold text-[#0b4f75]">Live Transcript:</p>
-                  <button
-                    onClick={() => setShowFullTranscript((prev) => !prev)}
-                    className="text-sm text-[#0b4f75] hover:underline focus:outline-none"
-                  >
-                    {showFullTranscript ? (
-                      <div className="flex items-center gap-2 cursor-pointer">
-                        Minimize <ChevronDown />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 cursor-pointer">
-                        Expand <ChevronUp />
-                      </div>
-                    )}
-                  </button>
-                </div>
-                <div
-                  className={`${
-                    showFullTranscript ? "max-h-60 mt-2" : "max-h-0"
-                  } overflow-y-auto pr-1 transition-all duration-300`}
-                >
-                  <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                    {transcript}
-                  </p>
-                </div>
+            {(transcript || searchResult) && (
+              <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-[500px] z-10">
+                {/* Transcript */}
+                {transcript && (
+                  <div className="bg-white rounded-xl shadow-lg p-4 border border-[#c8d1dd]">
+                    <div className="flex justify-between items-center">
+                      <p className="font-bold text-[#0b4f75]">
+                        Live Transcript:
+                      </p>
+                      <button
+                        onClick={() => setShowFullTranscript((prev) => !prev)}
+                        className="text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                      >
+                        {showFullTranscript ? (
+                          <div className="flex items-center gap-2 cursor-pointer">
+                            Minimize <ChevronDown />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 cursor-pointer">
+                            Expand <ChevronUp />
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                    <div
+                      className={`${
+                        showFullTranscript ? "max-h-60 mt-2" : "max-h-0"
+                      } overflow-y-auto pr-1 transition-all duration-300`}
+                    >
+                      <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                        {transcript}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* AI Answer */}
+                {searchResult && !searchLoading && (
+                  <div className="bg-white rounded-xl shadow-lg p-4 border border-[#c8d1dd]">
+                    <div className="flex justify-between items-center">
+                      <p className="font-bold text-[#0b4f75]">AI Answer:</p>
+                      <button
+                        onClick={() => setShowAIAnswer((prev) => !prev)}
+                        className="text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                      >
+                        {showAIAnswer ? (
+                          <div className="flex items-center gap-2 cursor-pointer">
+                            Minimize <ChevronDown />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 cursor-pointer">
+                            Expand <ChevronUp />
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                    <div
+                      className={`${
+                        showAIAnswer ? "max-h-60 mt-2" : "max-h-0"
+                      } overflow-y-auto pr-1 transition-all duration-300`}
+                    >
+                      <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                        {searchResult}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -605,10 +671,17 @@ export default function CaptureClient() {
               <div className="relative w-full max-w-md">
                 <input
                   type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearch();
+                    }
+                  }}
                   placeholder="Ask All Memories"
                   className="w-full pr-10 bg-[#e8edee] text-[#0b4f75] rounded-full px-4 py-2 font-semibold shadow-md border-2 border-[#c8d1dd] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0b4f75]"
                 />
-                <button>
+                <button onClick={handleSearch}>
                   <Search
                     className="absolute right-5 top-1/2 transform -translate-y-1/2 text-[#0b4f75] cursor-pointer"
                     size={20}
