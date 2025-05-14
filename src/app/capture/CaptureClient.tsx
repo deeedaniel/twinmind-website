@@ -45,15 +45,15 @@ export default function CaptureClient() {
   const [transcript, setTranscript] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  // const [transcripts, setTranscripts] = useState<Transcript[]>([]);
-  // const [isLoading, setIsLoading] = useState(true);
-  //const [error, setError] = useState<string | null>(null);
+  const [transcripts, setTranscripts] = useState<Transcript[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isCalendarLoading, setIsCalendarLoading] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
-  // const [summaries, setSummaries] = useState<Summary[]>([]);
+  const [summaries, setSummaries] = useState<Summary[]>([]);
   const [transcriptText, setTranscriptText] = useState("");
-  //const [data, setData] = useState<Transcript[]>([]);
+  const [data, setData] = useState<Transcript[]>([]);
   const [grouped, setGrouped] = useState<Record<string, Transcript[]>>({});
   const [selected, setSelected] = useState<Transcript | null>(null);
   const [modalTab, setModalTab] = useState<"summary" | "transcript">("summary");
@@ -361,48 +361,37 @@ export default function CaptureClient() {
 
               {activeTab === "memories" && (
                 <div className="p-4 mb-24">
-                  {Object.keys(grouped).length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-32">
-                      <p className="text-lg text-gray-500 font-medium">
-                        No memories yet!
-                      </p>
-                      <p className="text-sm text-gray-400 mt-2">
-                        Start recording to create your first memory
-                      </p>
-                    </div>
-                  ) : (
-                    Object.entries(grouped).map(([date, entries]) => (
-                      <div key={date} className="mb-6 w-[600px]">
-                        <h2 className="text-lg font-bold text-[#646464]">
-                          {date}
-                        </h2>
-                        <div className="space-y-4 mt-2">
-                          {entries.map((entry) => (
-                            <div
-                              key={entry.id}
-                              className="cursor-pointer shadow-sm bg-white px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:translate-x-1"
-                              onClick={() => setSelected(entry)}
-                            >
-                              <div className="flex gap-6 items-center">
-                                <div className="flex flex-col items-center">
-                                  <span className="text-sm text-gray-500">
-                                    {format(new Date(entry.createdAt), "h:mm")}
-                                  </span>
-                                  <span className="text-sm text-gray-500">
-                                    {format(new Date(entry.createdAt), "aaa")}
-                                  </span>
-                                </div>
-                                <span className="font-medium text-gray-800 truncate">
-                                  {entry.summary?.summaryTitle ||
-                                    "Untitled Memory"}
+                  {Object.entries(grouped).map(([date, entries]) => (
+                    <div key={date} className="mb-6 w-[600px]">
+                      <h2 className="text-lg font-bold text-[#646464]">
+                        {date}
+                      </h2>
+                      <div className="space-y-4 mt-2">
+                        {entries.map((entry) => (
+                          <div
+                            key={entry.id}
+                            className="cursor-pointer shadow-sm bg-white px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:translate-x-1"
+                            onClick={() => setSelected(entry)}
+                          >
+                            <div className="flex gap-6 items-center">
+                              <div className="flex flex-col items-center">
+                                <span className="text-sm text-gray-500">
+                                  {format(new Date(entry.createdAt), "h:mm")}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  {format(new Date(entry.createdAt), "aaa")}
                                 </span>
                               </div>
+                              <span className="font-medium text-gray-800 truncate">
+                                {entry.summary?.summaryTitle ||
+                                  "Untitled Memory"}
+                              </span>
                             </div>
-                          ))}
-                        </div>
+                          </div>
+                        ))}
                       </div>
-                    ))
-                  )}
+                    </div>
+                  ))}
 
                   {/* Modal */}
                   {selected && (
@@ -509,11 +498,7 @@ export default function CaptureClient() {
                   {!isCalendarLoading &&
                     !calendarError &&
                     Object.keys(groupedEvents).length === 0 && (
-                      <div className="flex flex-col items-center justify-center h-32">
-                        <p className="text-lg text-gray-500 font-medium">
-                          No upcoming events.
-                        </p>
-                      </div>
+                      <p>No upcoming events</p>
                     )}
                   {!isCalendarLoading &&
                     !calendarError &&
