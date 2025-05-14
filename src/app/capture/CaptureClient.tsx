@@ -66,6 +66,9 @@ export default function CaptureClient() {
   // Add streamRef at component level
   const streamRef = useRef<MediaStream | null>(null);
 
+  // Add this with other refs at the component level
+  const chunkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   // First, let's extract the fetch transcripts logic into a reusable function
   const fetchTranscripts = async () => {
     const res = await fetch("/api/transcript");
@@ -162,6 +165,12 @@ export default function CaptureClient() {
 
   // Start recording function
   const startRecording = async () => {
+    // Clear any existing interval first
+    if (chunkIntervalRef.current) {
+      clearInterval(chunkIntervalRef.current);
+      chunkIntervalRef.current = null;
+    }
+
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const mediaRecorder = new MediaRecorder(stream);
 
@@ -170,8 +179,6 @@ export default function CaptureClient() {
 
     audioChunksRef.current = [];
     shouldStopRef.current = false;
-    // Every 30 seconds, stop and restart the recorder
-    let chunkInterval: NodeJS.Timeout;
 
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) {
@@ -220,25 +227,26 @@ export default function CaptureClient() {
     setIsRecording(true);
 
     // Auto-stop & restart every 30 seconds
-    chunkInterval = setInterval(() => {
-      mediaRecorderRef.current?.stop();
+    chunkIntervalRef.current = setInterval(() => {
+      if (mediaRecorderRef.current && !shouldStopRef.current) {
+        mediaRecorderRef.current.stop();
+      }
     }, 30_000);
-
-    // Stop interval when recording stops
-    (mediaRecorderRef.current as any).cleanup = () =>
-      clearInterval(chunkInterval);
   };
 
   // Then update the stopRecording function to refetch after saving
   const stopRecording = async () => {
     shouldStopRef.current = true;
 
+    // Clear the chunk interval
+    if (chunkIntervalRef.current) {
+      clearInterval(chunkIntervalRef.current);
+      chunkIntervalRef.current = null;
+    }
+
     // Stop the media recorder
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
-      if ((mediaRecorderRef.current as any)?.cleanup) {
-        (mediaRecorderRef.current as any).cleanup();
-      }
     }
 
     // Stop all tracks in the stream
@@ -297,7 +305,7 @@ export default function CaptureClient() {
         {/* Tabs */}
         <div className="fixed top-14 left-1/2 -translate-x-1/2 bg-white z-10 shadow-sm rounded-xl">
           <div className="max-w-4xl mx-auto px-2 py-2">
-            <div className="flex justify-center space-x-20">
+            <div className="flex justify-center space-x-20 text-lg">
               {["memories", "calendar", "questions"].map((tab) => (
                 <button
                   key={tab}
