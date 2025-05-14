@@ -13,7 +13,15 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "TwinMind",
-  description: "TwinMind - your personal jarvis.",
+  description: "TwinMind - your personal Jarvis.",
+  openGraph: {
+    title: "TwinMind",
+    description: "TwinMind - your personal Jarvis.",
+    siteName: "TwinMind",
+    images: "/twinmind_logo.webp",
+    locale: "en_US",
+    type: "website",
+  },
   icons: {
     icon: "/favicon.svg",
   },
