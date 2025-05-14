@@ -1,7 +1,6 @@
-import NextAuth, { NextAuthOptions, DefaultSession, Session } from "next-auth";
+import NextAuth, { NextAuthOptions, DefaultSession } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaClient } from "@prisma/client";
-import { JWT } from "next-auth/jwt";
 
 const prisma = new PrismaClient();
 
@@ -68,7 +67,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.sub;
       }
       // Pass accessToken to session if you need it for calendar fetches
-      (session as any).accessToken = token.accessToken;
+      (session as unknown) = token.accessToken;
       return session;
     },
   },

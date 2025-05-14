@@ -5,7 +5,7 @@ import { authOptions } from "../auth/[...nextauth]/route"; // make sure this pat
 
 const prisma = new PrismaClient();
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user?.email) {
