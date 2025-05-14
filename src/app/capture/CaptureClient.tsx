@@ -295,6 +295,7 @@ export default function CaptureClient() {
         !modalRef.current.contains(event.target as Node)
       ) {
         setSelected(null); // close modal
+        setModalTab("summary");
       }
     }
 
