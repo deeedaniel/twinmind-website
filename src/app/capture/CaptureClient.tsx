@@ -63,6 +63,7 @@ export default function CaptureClient() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [showAIAnswer, setShowAIAnswer] = useState(false);
   const [personalization, setPersonalization] = useState("");
+  const finalTranscriptRef = useRef<string>(""); // NEW
 
   const shouldStopRef = useRef(false);
 
@@ -206,15 +207,39 @@ export default function CaptureClient() {
       });
 
       const data = await res.json();
-      setTranscript((prev) => prev + " " + data.text);
-      setTranscriptText((prev) => prev + " " + data.text);
+      const fullText = (data.text || "").trim();
 
-      // Only restart recording if we're not stopping
+      finalTranscriptRef.current += " " + fullText; // ✅ accumulate full transcript
+
+      setTranscript((prev) => prev + " " + fullText);
+      setTranscriptText((prev) => prev + " " + fullText);
+
+      // ✅ Only save once if this was the final stop
+      if (shouldStopRef.current && finalTranscriptRef.current.trim()) {
+        const saveRes = await fetch("/api/save-transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: finalTranscriptRef.current.trim() }),
+        });
+
+        const { transcriptId } = await saveRes.json();
+
+        await fetch("/api/summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ transcriptId }),
+        });
+
+        await fetchTranscripts(); // refresh UI
+
+        // ✅ Reset everything
+        finalTranscriptRef.current = "";
+        setTranscript("");
+        setTranscriptText("");
+      }
+
+      // Restart recorder if not stopping
       if (!shouldStopRef.current) {
-        // Clear previous chunk
-        audioChunksRef.current = [];
-
-        // Restart recording
         mediaRecorderRef.current = new MediaRecorder(stream);
         mediaRecorderRef.current.ondataavailable =
           mediaRecorder.ondataavailable;
@@ -244,18 +269,15 @@ export default function CaptureClient() {
   const stopRecording = async () => {
     shouldStopRef.current = true;
 
-    // Clear the chunk interval
     if (chunkIntervalRef.current) {
       clearInterval(chunkIntervalRef.current);
       chunkIntervalRef.current = null;
     }
 
-    // Stop the media recorder
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
 
-    // Stop all tracks in the stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -263,30 +285,7 @@ export default function CaptureClient() {
 
     setIsRecording(false);
 
-    // Save transcript if there's any text
-    if (transcriptText.trim()) {
-      const res = await fetch("/api/save-transcript", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: transcriptText }),
-      });
-
-      const { transcriptId } = await res.json();
-
-      // Generate summary
-      await fetch("/api/summary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ transcriptId }),
-      });
-
-      // Clear the transcript text
-      setTranscript("");
-      setTranscriptText("");
-
-      // Refetch transcripts to update the list
-      await fetchTranscripts();
-    }
+    // ❌ No need to save here. The final `onstop` handles it.
   };
 
   useEffect(() => {
