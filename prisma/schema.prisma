@@ -8,27 +8,29 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(uuid())
-  email     String     @unique
-  name      String?
-  transcripts Transcript[]
-  createdAt DateTime  @default(now())
+  id              String       @id @default(uuid())
+  email           String       @unique
+  name            String?
+  createdAt       DateTime     @default(now())
+  personalization String?
+  transcripts     Transcript[]
 }
 
 model Transcript {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
+  id        String                 @id @default(uuid())
   userId    String
   text      String
-  createdAt DateTime @default(now())
+  createdAt DateTime               @default(now())
+  embedding Unsupported("vector")?
   summary   Summary?
+  user      User                   @relation(fields: [userId], references: [id])
 }
 
 model Summary {
-  id        String     @id @default(uuid())
-  transcript Transcript @relation(fields: [transcriptId], references: [id])
-  transcriptId String   @unique
-  summaryText String
+  id           String     @id @default(uuid())
+  transcriptId String     @unique
+  summaryText  String
   summaryTitle String
-  createdAt   DateTime @default(now())
+  createdAt    DateTime   @default(now())
+  transcript   Transcript @relation(fields: [transcriptId], references: [id])
 }
