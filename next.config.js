@@ -32,6 +32,9 @@ const nextConfig = {
 
   // Enable source maps in production for better error tracking
   productionBrowserSourceMaps: true,
+
+  // Transpile modules
+  transpilePackages: ["tailwindcss"],
 };
 
 module.exports = nextConfig;
