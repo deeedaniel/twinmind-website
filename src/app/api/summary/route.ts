@@ -28,22 +28,35 @@ export async function POST(req: NextRequest) {
   }
 
   const prompt = `
-About the user: ${(transcript.user as any)?.personalization || "None provided."}
+You will receive a raw audio transcript of a user's voice recording.
 
-You will receive an audio transcript. First, generate a short and relevant title (5–8 words) that summarizes the overall topic or intent. Then, provide clean, concise bullet point notes with key takeaways or actions. If deemed necessary, add Action Items at the end. Format your response like this:
+Your task is to extract and summarize only important, meaningful content. Ignore filler phrases, greetings (e.g., "hello", "1,2,3"), or anything unrelated to a real topic or idea.
 
-Title: [Your title here]
+Steps:
+1. Generate a short, relevant title (5–8 words) only if the content has clear intent.
+2. Write clear, concise bullet point notes summarizing the key points or ideas. 
+3. Only include action items if the transcript naturally suggests next steps or priorities.
+
+Format your response like this (only if content is meaningful):
+
+Title: [Concise title]
 
 • Bullet 1
-  • Sub-bullet 1
 • Bullet 2
+  • Sub-bullet if needed
 
 Action Items:
-1. Action Item 1
-2. Action Item 2
+1. Action 1
+2. Action 2
+
+If the transcript has no meaningful content, return a title "Untitled" and a short message "Transcript is too short or has no meaningful content":
+
+Title: Untitled
+
+• Transcript is too short or has no meaningful content.
 
 Transcript:
-"${transcript.text}"
+"""${transcript.text}"""
 `;
 
   const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
