@@ -335,12 +335,12 @@ export default function CaptureClient() {
       <div className="min-h-screen">
         {/* Tabs */}
         <div className="fixed top-14 left-1/2 -translate-x-1/2 bg-white z-10 shadow-sm rounded-xl">
-          <div className="max-w-4xl mx-auto px-2 py-2">
-            <div className="flex justify-center space-x-20 text-lg">
+          <div className="w-[300px] md:w-[650px] mx-auto px-2 py-2">
+            <div className="flex justify-center space-x-16 md:space-x-20 text-lg">
               {["memories", "calendar", "questions"].map((tab) => (
                 <button
                   key={tab}
-                  className={`w-[150px] transition-all${
+                  className={`w-[20px] md:w-[150px] transition-all text-sm md:text-lg${
                     activeTab === tab
                       ? "border-[#0b4f75] text-[#0b4f75] font-semibold cursor-pointer"
                       : "border-transparent text-gray-500 hover:text-[#0b4f75] cursor-pointer"
@@ -364,7 +364,7 @@ export default function CaptureClient() {
               {activeTab === "memories" && (
                 <div className="p-4 mb-24">
                   {Object.entries(grouped).map(([date, entries]) => (
-                    <div key={date} className="mb-6 w-[600px]">
+                    <div key={date} className="mb-6 md:w-[600px] w-[300px]">
                       <h2 className="text-lg font-bold text-[#646464]">
                         {date}
                       </h2>
@@ -505,7 +505,7 @@ export default function CaptureClient() {
                   {!isCalendarLoading &&
                     !calendarError &&
                     Object.entries(groupedEvents).map(([date, events]) => (
-                      <div key={date} className="mb-6 w-[600px]">
+                      <div key={date} className="mb-6 md:w-[600px] w-[300px]">
                         <h2 className="text-lg font-bold text-[#646464]">
                           {date}
                         </h2>
@@ -599,36 +599,39 @@ export default function CaptureClient() {
                 */}
             </div>
 
+            {/* Transcript and search results - Made responsive */}
             {(transcript || searchResult) && (
-              <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-[500px] z-10">
+              <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-full max-w-md px-4 z-10">
                 {/* Transcript */}
                 {transcript && (
-                  <div className="bg-white rounded-xl shadow-lg p-4 border border-[#c8d1dd]">
+                  <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd]">
                     <div className="flex justify-between items-center">
-                      <p className="font-bold text-[#0b4f75]">
+                      <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
                         Live Transcript:
                       </p>
                       <button
                         onClick={() => setShowFullTranscript((prev) => !prev)}
-                        className="text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                        className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
                       >
                         {showFullTranscript ? (
-                          <div className="flex items-center gap-2 cursor-pointer">
-                            Minimize <ChevronDown />
+                          <div className="flex items-center gap-1 cursor-pointer">
+                            Minimize <ChevronDown size={16} />
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2 cursor-pointer">
-                            Expand <ChevronUp />
+                          <div className="flex items-center gap-1 cursor-pointer">
+                            Expand <ChevronUp size={16} />
                           </div>
                         )}
                       </button>
                     </div>
                     <div
                       className={`${
-                        showFullTranscript ? "max-h-60 mt-2" : "max-h-0"
+                        showFullTranscript
+                          ? "max-h-40 sm:max-h-60 mt-2"
+                          : "max-h-0"
                       } overflow-y-auto pr-1 transition-all duration-300`}
                     >
-                      <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                      <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
                         {transcript}
                       </p>
                     </div>
@@ -637,32 +640,32 @@ export default function CaptureClient() {
 
                 {/* AI Answer */}
                 {searchResult && !searchLoading && (
-                  <div className="bg-white rounded-xl shadow-lg p-4 border border-[#c8d1dd]">
+                  <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd]">
                     <div className="flex justify-between items-center">
-                      <p className="font-bold text-[#0b4f75]">
+                      <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
                         TwinMind Answer:
                       </p>
                       <button
                         onClick={() => setShowAIAnswer((prev) => !prev)}
-                        className="text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                        className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
                       >
                         {showAIAnswer ? (
-                          <div className="flex items-center gap-2 cursor-pointer">
-                            Minimize <ChevronDown />
+                          <div className="flex items-center gap-1 cursor-pointer">
+                            Minimize <ChevronDown size={16} />
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2 cursor-pointer">
-                            Expand <ChevronUp />
+                          <div className="flex items-center gap-1 cursor-pointer">
+                            Expand <ChevronUp size={16} />
                           </div>
                         )}
                       </button>
                     </div>
                     <div
                       className={`${
-                        showAIAnswer ? "max-h-60 mt-2" : "max-h-0"
+                        showAIAnswer ? "max-h-40 sm:max-h-60 mt-2" : "max-h-0"
                       } overflow-y-auto pr-1 transition-all duration-300`}
                     >
-                      <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                      <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
                         {searchResult}
                       </p>
                     </div>
@@ -671,45 +674,48 @@ export default function CaptureClient() {
               </div>
             )}
 
-            <div className="fixed bottom-14 left-1/2 -translate-x-1/2 gap-4 grid grid-cols-2">
-              {/* Ask All Memories button */}
-              <div className="relative w-full max-w-md">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleSearch();
-                    }
-                  }}
-                  placeholder="Ask All Memories"
-                  className="w-full pr-10 bg-[#e8edee] text-[#0b4f75] rounded-full px-4 py-2 font-semibold shadow-md border-2 border-[#c8d1dd] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0b4f75]"
-                />
-                <button onClick={handleSearch}>
-                  <Search
-                    className="absolute right-5 top-1/2 transform -translate-y-1/2 text-[#0b4f75] cursor-pointer"
-                    size={20}
+            {/* Bottom controls - Made responsive */}
+            <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Ask All Memories button */}
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSearch();
+                      }
+                    }}
+                    placeholder="Ask All Memories"
+                    className="w-full pr-10 bg-[#e8edee] text-[#0b4f75] rounded-full px-3 py-2 text-sm sm:text-base font-semibold shadow-md border-2 border-[#c8d1dd] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0b4f75]"
                   />
-                </button>
-              </div>
+                  <button onClick={handleSearch}>
+                    <Search
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0b4f75] cursor-pointer"
+                      size={18}
+                    />
+                  </button>
+                </div>
 
-              {/* Capture buttons */}
-              {isRecording ? (
-                <button
-                  onClick={stopRecording}
-                  className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full px-4 py-2 gap-4 font-semibold shadow-md cursor-pointer hover:scale-105 transition-all duration-300"
-                >
-                  <CircleStop /> Stop
-                </button>
-              ) : (
-                <button
-                  onClick={startRecording}
-                  className=" flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-4 py-2 gap-4 font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
-                >
-                  <Mic /> Capture
-                </button>
-              )}
+                {/* Capture buttons */}
+                {isRecording ? (
+                  <button
+                    onClick={stopRecording}
+                    className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full px-3 py-2 gap-2 text-sm sm:text-base font-semibold shadow-md cursor-pointer hover:scale-105 transition-all duration-300"
+                  >
+                    <CircleStop size={18} /> Stop
+                  </button>
+                ) : (
+                  <button
+                    onClick={startRecording}
+                    className="flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-3 py-2 gap-2 text-sm sm:text-base font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
+                  >
+                    <Mic size={18} /> Capture
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
