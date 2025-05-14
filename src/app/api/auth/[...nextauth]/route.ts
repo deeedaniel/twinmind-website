@@ -67,7 +67,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.sub;
       }
       // Pass accessToken to session if you need it for calendar fetches
-      (session as unknown) = token.accessToken;
+      session.accessToken = token.accessToken as string;
       return session;
     },
   },
