@@ -18,10 +18,19 @@ export const metadata: Metadata = {
     title: "TwinMind",
     description: "TwinMind - your personal Jarvis.",
     siteName: "TwinMind",
-    images: "/twinmind_logo.webp",
     locale: "en_US",
     type: "website",
+    url: "https://twinmind-website.vercel.app/",
+    images: [
+      {
+        url: "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/51/a9/6b/51a96b65-57ff-b010-80b2-3f5a76c6a086/AppIcon-0-0-1x_U007ephone-0-1-0-85-220.png/512x512bb.jpg",
+        width: 512,
+        height: 512,
+        alt: "TwinMind logo",
+      },
+    ],
   },
+
   icons: {
     icon: "/favicon.svg",
   },
