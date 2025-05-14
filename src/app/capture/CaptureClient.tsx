@@ -45,13 +45,13 @@ export default function CaptureClient() {
   const [transcript, setTranscript] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const [transcripts, setTranscripts] = useState<Transcript[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [transcripts, setTranscripts] = useState<Transcript[]>([]);
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [error, setError] = useState<string | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isCalendarLoading, setIsCalendarLoading] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
-  const [summaries, setSummaries] = useState<Summary[]>([]);
+  // const [summaries, setSummaries] = useState<Summary[]>([]);
   const [transcriptText, setTranscriptText] = useState("");
   const [data, setData] = useState<Transcript[]>([]);
   const [grouped, setGrouped] = useState<Record<string, Transcript[]>>({});
@@ -62,9 +62,11 @@ export default function CaptureClient() {
   const [searchResult, setSearchResult] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [showAIAnswer, setShowAIAnswer] = useState(false);
+  const [personalization, setPersonalization] = useState("");
 
   const shouldStopRef = useRef(false);
 
+  // This is for when user clicks out of modals to exit it
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Add streamRef at component level
@@ -508,7 +510,7 @@ export default function CaptureClient() {
                           {date}
                         </h2>
                         <div className="space-y-4 mt-2">
-                          {events.map((event) => {
+                          {(events as CalendarEvent[]).map((event) => {
                             const start =
                               event.start?.dateTime || event.start?.date;
                             const parsed = new Date(start || "");
@@ -637,7 +639,9 @@ export default function CaptureClient() {
                 {searchResult && !searchLoading && (
                   <div className="bg-white rounded-xl shadow-lg p-4 border border-[#c8d1dd]">
                     <div className="flex justify-between items-center">
-                      <p className="font-bold text-[#0b4f75]">AI Answer:</p>
+                      <p className="font-bold text-[#0b4f75]">
+                        TwinMind Answer:
+                      </p>
                       <button
                         onClick={() => setShowAIAnswer((prev) => !prev)}
                         className="text-sm text-[#0b4f75] hover:underline focus:outline-none"

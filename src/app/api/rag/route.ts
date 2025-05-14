@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
@@ -16,7 +16,9 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
+    select: { personalization: true } as any,
   });
+
   if (!user)
     return NextResponse.json({ error: "User not found" }, { status: 404 });
 
@@ -49,12 +51,18 @@ export async function POST(req: NextRequest) {
     queryEmbedding
   );
 
-  const context = results.map((r: any) => r.text).join("\n\n");
+  const context = (results as { text: string }[])
+    .map((r) => r.text)
+    .join("\n\n");
+
+  const personalization = user.personalization
+    ? `About the user: ${user.personalization}`
+    : "";
 
   // 3. Send to OpenAI for final generation
   const prompt = `
-You are an AI assistant that answers user questions based on their past transcripts.
-
+You are an AI assistant that answers user questions based on their profile and past transcripts.
+${personalization}
 Relevant transcripts:
 ${context}
 
