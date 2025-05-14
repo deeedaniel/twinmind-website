@@ -1,0 +1,6 @@
+.git
+.husky
+.github
+README.md
+*.log
+.env*.local 

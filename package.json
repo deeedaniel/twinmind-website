@@ -10,7 +10,7 @@
     "type-check": "tsc --noEmit",
     "lint:fix": "next lint --fix",
     "validate": "npm run lint && npm run type-check",
-    "prepare": "husky install"
+    "prepare": "if [ -d '.git' ]; then husky install; fi"
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",
@@ -29,6 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.1",
+    "husky": "^8.0.3",
     "prisma": "^6.7.0",
     "tailwindcss": "^4",
     "typescript": "^5"
