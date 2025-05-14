@@ -302,7 +302,7 @@ export default function CaptureClient() {
               {/* Memories tab */}
 
               {activeTab === "memories" && (
-                <div className="p-4">
+                <div className="p-4 mb-24">
                   {Object.entries(grouped).map(([date, entries]) => (
                     <div key={date} className="mb-6 w-[600px]">
                       <h2 className="text-lg font-bold text-[#646464]">
@@ -430,7 +430,7 @@ export default function CaptureClient() {
 
               {/* Calendar tab */}
               {activeTab === "calendar" && (
-                <div className="p-4">
+                <div className="p-4 mb-24">
                   {isCalendarLoading && <p>Loading calendar events...</p>}
                   {calendarError && (
                     <p className="text-red-500">{calendarError}</p>
