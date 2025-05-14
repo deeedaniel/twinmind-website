@@ -27,12 +27,17 @@ export async function POST(req: NextRequest) {
   }
 
   const prompt = `
-You will receive an audio transcript. First, generate a short and relevant title (5–8 words) that summarizes the overall topic or intent. Then, provide clean, concise bullet point notes with key takeaways or actions. Format your response like this:
+You will receive an audio transcript. First, generate a short and relevant title (5–8 words) that summarizes the overall topic or intent. Then, provide clean, concise bullet point notes with key takeaways or actions. If deemed necessary, add Action Items at the end. Format your response like this:
 
 Title: [Your title here]
 
-- Bullet 1
-- Bullet 2
+• Bullet 1
+  • Sub-bullet 1
+• Bullet 2
+
+Action Items:
+1. Action Item 1
+2. Action Item 2
 
 Transcript:
 "${transcript.text}"

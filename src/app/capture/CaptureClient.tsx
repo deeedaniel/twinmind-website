@@ -308,6 +308,7 @@ export default function CaptureClient() {
     if (!searchQuery.trim()) return;
 
     setSearchLoading(true);
+    setShowAIAnswer(true);
     setSearchResult("");
 
     try {
