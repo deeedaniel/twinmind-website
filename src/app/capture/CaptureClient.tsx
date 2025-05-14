@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import { Mic, CircleStop, Search, ChevronLeft } from "lucide-react";
+import {
+  Mic,
+  CircleStop,
+  Search,
+  ChevronLeft,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { format } from "date-fns";
 
 type Transcript = {
@@ -50,52 +57,36 @@ export default function CaptureClient() {
   const [grouped, setGrouped] = useState<Record<string, Transcript[]>>({});
   const [selected, setSelected] = useState<Transcript | null>(null);
   const [modalTab, setModalTab] = useState<"summary" | "transcript">("summary");
+  const [showFullTranscript, setShowFullTranscript] = useState(false);
+
+  const shouldStopRef = useRef(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Calling api to fetching transcripts
-  /*
-  useEffect(() => {
-    const fetchTranscripts = async () => {
-      try {
-        setIsLoading(true);
-        const res = await fetch("/api/transcript");
-        if (!res.ok) {
-          throw new Error("Failed to fetch transcripts");
-        }
-        const data = await res.json();
-        setTranscripts(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Add streamRef at component level
+  const streamRef = useRef<MediaStream | null>(null);
 
-    fetchTranscripts();
-  }, []);
-  */
-
-  useEffect(() => {
-    fetch("/api/transcript")
-      .then((res) => res.json())
-      .then((transcripts) => {
-        setData(transcripts);
-        const groupedByDate = transcripts.reduce(
-          (acc: any, item: Transcript) => {
-            const date = new Date(item.createdAt).toLocaleDateString("en-US", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-            });
-            acc[date] = acc[date] || [];
-            acc[date].push(item);
-            return acc;
-          },
-          {}
-        );
-        setGrouped(groupedByDate);
+  // First, let's extract the fetch transcripts logic into a reusable function
+  const fetchTranscripts = async () => {
+    const res = await fetch("/api/transcript");
+    const transcripts = await res.json();
+    setData(transcripts);
+    const groupedByDate = transcripts.reduce((acc: any, item: Transcript) => {
+      const date = new Date(item.createdAt).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
       });
+      acc[date] = acc[date] || [];
+      acc[date].push(item);
+      return acc;
+    }, {});
+    setGrouped(groupedByDate);
+  };
+
+  // Update the useEffect to use this function
+  useEffect(() => {
+    fetchTranscripts();
   }, []);
 
   // Calling api to fetch calendar events
@@ -174,8 +165,11 @@ export default function CaptureClient() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const mediaRecorder = new MediaRecorder(stream);
 
-    audioChunksRef.current = [];
+    // Store stream reference
+    streamRef.current = stream;
 
+    audioChunksRef.current = [];
+    shouldStopRef.current = false;
     // Every 30 seconds, stop and restart the recorder
     let chunkInterval: NodeJS.Timeout;
 
@@ -199,18 +193,26 @@ export default function CaptureClient() {
       });
 
       const data = await res.json();
-      setTranscript((prev) => prev + " " + data.text); // still shows in UI
-      setTranscriptText((prev) => prev + " " + data.text); // NEW: accumulate for DB
+      setTranscript((prev) => prev + " " + data.text);
+      setTranscriptText((prev) => prev + " " + data.text);
 
-      // Clear previous chunk
-      audioChunksRef.current = [];
+      // Only restart recording if we're not stopping
+      if (!shouldStopRef.current) {
+        // Clear previous chunk
+        audioChunksRef.current = [];
 
-      // Restart recording
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      mediaRecorderRef.current.ondataavailable = mediaRecorder.ondataavailable;
-      mediaRecorderRef.current.onstop = mediaRecorder.onstop;
-      mediaRecorderRef.current.start();
+        // Restart recording
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current.ondataavailable =
+          mediaRecorder.ondataavailable;
+        mediaRecorderRef.current.onstop = mediaRecorder.onstop;
+        mediaRecorderRef.current.start();
+      }
     };
+
+    if (shouldStopRef.current) {
+      return;
+    }
 
     // Start initial recording
     mediaRecorder.start();
@@ -227,15 +229,27 @@ export default function CaptureClient() {
       clearInterval(chunkInterval);
   };
 
-  // Stop recording function
+  // Then update the stopRecording function to refetch after saving
   const stopRecording = async () => {
-    mediaRecorderRef.current?.stop();
-    setIsRecording(false);
+    shouldStopRef.current = true;
 
-    if ((mediaRecorderRef.current as any)?.cleanup) {
-      (mediaRecorderRef.current as any).cleanup();
+    // Stop the media recorder
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      if ((mediaRecorderRef.current as any)?.cleanup) {
+        (mediaRecorderRef.current as any).cleanup();
+      }
     }
 
+    // Stop all tracks in the stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+
+    setIsRecording(false);
+
+    // Save transcript if there's any text
     if (transcriptText.trim()) {
       const res = await fetch("/api/save-transcript", {
         method: "POST",
@@ -245,12 +259,19 @@ export default function CaptureClient() {
 
       const { transcriptId } = await res.json();
 
-      // ✅ Generate summary now
+      // Generate summary
       await fetch("/api/summary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transcriptId }),
       });
+
+      // Clear the transcript text
+      setTranscript("");
+      setTranscriptText("");
+
+      // Refetch transcripts to update the list
+      await fetchTranscripts();
     }
   };
 
@@ -388,16 +409,18 @@ export default function CaptureClient() {
                           </button>
                         </div>
 
-                        {modalTab === "summary" ? (
-                          <p className="text-gray-800 whitespace-pre-wrap">
-                            {selected.summary?.summaryText ||
-                              "No summary available."}
-                          </p>
-                        ) : (
-                          <p className="text-gray-800 whitespace-pre-wrap">
-                            {selected.text}
-                          </p>
-                        )}
+                        <div className="max-h-100 overflow-y-auto pr-2">
+                          {modalTab === "summary" ? (
+                            <p className="text-gray-800 whitespace-pre-wrap">
+                              {selected.summary?.summaryText ||
+                                "No summary available."}
+                            </p>
+                          ) : (
+                            <p className="text-gray-800 whitespace-pre-wrap">
+                              {selected.text}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -447,7 +470,7 @@ export default function CaptureClient() {
                         <h2 className="text-lg font-bold text-[#646464]">
                           {date}
                         </h2>
-                        <div className="space-y-2 mt-2">
+                        <div className="space-y-4 mt-2">
                           {events.map((event) => {
                             const start =
                               event.start?.dateTime || event.start?.date;
@@ -539,9 +562,33 @@ export default function CaptureClient() {
 
             {/* Transcript */}
             {transcript && (
-              <div className="fixed top-24 right-8 w-[300px] bg-white rounded-lg shadow-lg p-4">
-                <p className="font-bold text-[#0b4f75] mb-2">Transcript:</p>
-                <p className="text-sm">{transcript}</p>
+              <div className="fixed bottom-32 left-1/2 -translate-x-1/2 w-[500px] bg-white rounded-xl shadow-lg p-4 border-1 border-[#c8d1dd]">
+                <div className="flex justify-between items-center">
+                  <p className="font-bold text-[#0b4f75]">Live Transcript:</p>
+                  <button
+                    onClick={() => setShowFullTranscript((prev) => !prev)}
+                    className="text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                  >
+                    {showFullTranscript ? (
+                      <div className="flex items-center gap-2 cursor-pointer">
+                        Minimize <ChevronDown />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 cursor-pointer">
+                        Expand <ChevronUp />
+                      </div>
+                    )}
+                  </button>
+                </div>
+                <div
+                  className={`${
+                    showFullTranscript ? "max-h-60 mt-2" : "max-h-0"
+                  } overflow-y-auto pr-1 transition-all duration-300`}
+                >
+                  <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                    {transcript}
+                  </p>
+                </div>
               </div>
             )}
 
