@@ -10,6 +10,12 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { format } from "date-fns";
+import AudioRecorderPolyfill from "audio-recorder-polyfill";
+
+// Testing: this is for iOS
+if (typeof window !== "undefined" && typeof MediaRecorder === "undefined") {
+  window.MediaRecorder = AudioRecorderPolyfill;
+}
 
 type Transcript = {
   id: string;
@@ -195,11 +201,11 @@ export default function CaptureClient() {
 
     mediaRecorder.onstop = async () => {
       const audioBlob = new Blob(audioChunksRef.current, {
-        type: "audio/webm",
+        type: "audio/wav",
       });
 
       const formData = new FormData();
-      formData.append("audio", audioBlob, "recording.webm");
+      formData.append("audio", audioBlob, "recording.wav");
 
       const res = await fetch("/api/transcribe-gemini", {
         method: "POST",

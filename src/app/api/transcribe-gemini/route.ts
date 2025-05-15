@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
             { text: "Generate a transcript of the speech." },
             {
               inlineData: {
-                mimeType: "audio/webm",
+                mimeType: "audio/wav",
                 data: audioBase64,
               },
             },
