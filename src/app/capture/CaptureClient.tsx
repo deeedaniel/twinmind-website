@@ -657,7 +657,7 @@ export default function CaptureClient() {
                     <p>No questions yet.</p>
                   ) : (
                     <ul className="space-y-4 max-w-[600px]">
-                      <div className="p-4 mb-24">
+                      <div className="mb-24">
                         {Object.keys(groupedQuestions).length === 0 ? (
                           <p>No questions yet.</p>
                         ) : (
