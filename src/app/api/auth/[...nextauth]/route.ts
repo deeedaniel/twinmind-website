@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// Extend Session type to include `user.id` and `accessToken`
+// Extend Session type
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
@@ -12,8 +12,51 @@ declare module "next-auth" {
     } & DefaultSession["user"];
     accessToken?: string;
   }
+
+  interface JWT {
+    accessToken?: string;
+    accessTokenExpires?: number;
+    refreshToken?: string;
+  }
 }
 
+// --- NEW CODE: Function to refresh access token ---
+async function refreshAccessToken(token: any) {
+  try {
+    const url =
+      "https://oauth2.googleapis.com/token?" +
+      new URLSearchParams({
+        client_id: process.env.GOOGLE_CLIENT_ID!,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        grant_type: "refresh_token",
+        refresh_token: token.refreshToken!,
+      });
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
+
+    const refreshedTokens = await response.json();
+
+    if (!response.ok) throw refreshedTokens;
+
+    return {
+      ...token,
+      accessToken: refreshedTokens.access_token,
+      accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
+      refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
+    };
+  } catch (error) {
+    console.error("Error refreshing access token:", error);
+    return {
+      ...token,
+      error: "RefreshAccessTokenError",
+    };
+  }
+}
+
+// --- Main config ---
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -78,17 +121,34 @@ export const authOptions: NextAuthOptions = {
         return false;
       }
     },
+
     async jwt({ token, account }) {
+      // Initial sign in
       if (account) {
-        token.accessToken = account.access_token; // store access token for calendar
+        return {
+          ...token,
+          accessToken: account.access_token,
+          accessTokenExpires: Date.now() + account.expires_at! * 1000,
+          refreshToken: account.refresh_token,
+        };
       }
-      return token;
+
+      // Return previous token if access token is still valid
+      if (
+        token.accessTokenExpires &&
+        Date.now() < (token.accessTokenExpires as number)
+      ) {
+        return token;
+      }
+
+      // Access token has expired, try to update it
+      return await refreshAccessToken(token);
     },
+
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
       }
-      // Pass accessToken to session if you need it for calendar fetches
       session.accessToken = token.accessToken as string;
       return session;
     },
@@ -96,5 +156,4 @@ export const authOptions: NextAuthOptions = {
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };
