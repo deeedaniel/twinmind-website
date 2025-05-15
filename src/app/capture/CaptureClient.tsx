@@ -248,9 +248,6 @@ export default function CaptureClient() {
 
     mediaRecorder.onstop = async () => {
       // ✅ Reset everything, this makes is so transcript stays until a new recording starts
-      finalTranscriptRef.current = "";
-      setTranscript("");
-      setTranscriptText("");
 
       const audioBlob = new Blob(audioChunksRef.current, {
         type: "audio/wav",
@@ -867,7 +864,12 @@ export default function CaptureClient() {
                   </button>
                 ) : (
                   <button
-                    onClick={startRecording}
+                    onClick={() => {
+                      startRecording();
+                      finalTranscriptRef.current = "";
+                      setTranscript("");
+                      setTranscriptText("");
+                    }}
                     className="flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-3 py-2 gap-2 text-sm sm:text-base font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
                   >
                     <Mic size={18} /> Capture
