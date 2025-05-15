@@ -463,7 +463,7 @@ export default function CaptureClient() {
                             onClick={() => setSelected(entry)}
                           >
                             <div className="flex gap-6 items-center">
-                              <div className="flex flex-col items-center">
+                              <div className="flex flex-col items-center w-8">
                                 <span className="text-sm text-gray-500">
                                   {format(new Date(entry.createdAt), "h:mm")}
                                 </span>
