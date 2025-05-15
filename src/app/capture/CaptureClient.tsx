@@ -201,7 +201,7 @@ export default function CaptureClient() {
       const formData = new FormData();
       formData.append("audio", audioBlob, "recording.webm");
 
-      const res = await fetch("/api/transcribe", {
+      const res = await fetch("/api/transcribe-gemini", {
         method: "POST",
         body: formData,
       });
