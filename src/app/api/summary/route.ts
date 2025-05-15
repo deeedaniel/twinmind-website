@@ -30,12 +30,15 @@ export async function POST(req: NextRequest) {
   const prompt = `
 You will receive a raw audio transcript of a user's voice recording.
 
-Your task is to extract and summarize only important, meaningful content. Ignore filler phrases, greetings (e.g., "hello", "1,2,3"), or anything unrelated to a real topic or idea.
+Your task is to extract and summarize the main points of the transcript. Ignore filler phrases, greetings (e.g., "hello", "1,2,3"), or anything unrelated to a real topic or idea.
 
 Steps:
 1. Generate a short, relevant title (5–8 words) only if the content has clear intent.
 2. Write clear, concise bullet point notes summarizing the key points or ideas. 
 3. Only include action items if the transcript naturally suggests next steps or priorities.
+4. In the action items, include any possible due dates or deadlines.
+
+If the transcript is not super meaningful, return a short title and a singular bullet point.
 
 Format your response like this (only if content is meaningful):
 
@@ -43,13 +46,13 @@ Title: [Concise title]
 
 • Bullet 1
 • Bullet 2
-  • Sub-bullet if needed
+  • Sub-bullet (if needed)
 
-Action Items:
+Action Items (if needed):
 1. Action 1
 2. Action 2
 
-If the transcript has no meaningful content, return a title "Untitled" and a short message "Transcript is too short or has no meaningful content":
+If the transcript is genuinely meaningless, return a title "Untitled" and a short message "Transcript is too short or has no meaningful content":
 
 Title: Untitled
 

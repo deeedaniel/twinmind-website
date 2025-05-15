@@ -274,8 +274,10 @@ export default function CaptureClient() {
 
       finalTranscriptRef.current += " " + fullText; // ✅ accumulate full transcript
 
-      setTranscript((prev) => prev + " " + fullText);
-      setTranscriptText((prev) => prev + " " + fullText);
+      // Condition to check if prev is not empty
+      // Avoids blank space in the beginning for no reason
+      setTranscript((prev) => (prev ? prev + " " + fullText : fullText));
+      setTranscriptText((prev) => (prev ? prev + " " + fullText : fullText));
 
       // ✅ Only save once if this was the final stop
       if (shouldStopRef.current && finalTranscriptRef.current.trim()) {
@@ -420,12 +422,12 @@ export default function CaptureClient() {
       <div className="min-h-screen">
         {/* Tabs */}
         <div className="fixed top-14 left-1/2 -translate-x-1/2 bg-white z-10 shadow-sm rounded-xl">
-          <div className="w-[300px] md:w-[650px] mx-auto px-2 py-2">
-            <div className="flex justify-center space-x-16 md:space-x-20 text-lg">
+          <div className="w-[300px] md:w-[650px] mx-auto px-2 py-3 md:py-2">
+            <div className="flex justify-center space-x-16 md:space-x-20 -translate-x-5 md:-translate-x-0">
               {["memories", "calendar", "questions"].map((tab) => (
                 <button
                   key={tab}
-                  className={`w-[20px] md:w-[150px] transition-all text-sm md:text-lg${
+                  className={`w-[20px] md:w-[150px] transition-all text-sm md:text-lg ${
                     activeTab === tab
                       ? "border-[#0b4f75] text-[#0b4f75] font-semibold cursor-pointer"
                       : "border-transparent text-gray-500 hover:text-[#0b4f75] cursor-pointer"
@@ -465,7 +467,7 @@ export default function CaptureClient() {
                                 <span className="text-sm text-gray-500">
                                   {format(new Date(entry.createdAt), "h:mm")}
                                 </span>
-                                <span className="text-sm text-gray-500">
+                                <span className="text-sm text-gray-500 uppercase">
                                   {format(new Date(entry.createdAt), "aaa")}
                                 </span>
                               </div>
@@ -504,8 +506,11 @@ export default function CaptureClient() {
                           <p className="text-sm text-[#909090] mb-4 font-semibold">
                             {format(
                               new Date(selected.createdAt),
-                              "MMM d, yyyy '·' h:mmaaa"
+                              "MMM d, yyyy '·' h:mm"
                             )}
+                            <span className="text-sm text-[#909090] uppercase">
+                              {format(new Date(selected.createdAt), "aaa")}
+                            </span>
                           </p>
                         </div>
 
@@ -610,7 +615,10 @@ export default function CaptureClient() {
                                   </span>
                                   <div>
                                     <span className="text-sm text-gray-500">
-                                      {format(parsed, "h:mmaaa")}
+                                      {format(parsed, "h:mm")}
+                                    </span>
+                                    <span className="text-sm text-gray-500 uppercase">
+                                      {format(parsed, "aaa")}
                                     </span>
                                   </div>
                                 </div>
@@ -688,7 +696,7 @@ export default function CaptureClient() {
                                           className="text-[#757575] bg-[#cedae8] rounded-full p-2 flex-shrink-0"
                                         />
                                         <div className="flex flex-col overflow-hidden">
-                                          <p className="text-sm font-semibold text-gray-700 truncate">
+                                          <p className="text-md font-semibold text-gray-700 truncate">
                                             {q.query}
                                           </p>
                                           <p className="text-sm mt-1 text-gray-500 truncate">
@@ -839,7 +847,7 @@ export default function CaptureClient() {
             )}
 
             {/* Bottom controls - Made responsive */}
-            <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-md px-4">
+            <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-md px-16 md:px-0 scale-125 md:scale-100">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Ask All Memories button */}
                 <div className="relative w-full">

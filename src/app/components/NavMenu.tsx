@@ -99,8 +99,8 @@ export default function NavMenu() {
                   className="rounded-full"
                 />
               )}
-              <div className="flex flex-col">
-                <p className="font-medium">{session.user.name}</p>
+              <div className="">
+                <p className="font-semibold text-lg">{session.user.name}</p>
                 <button
                   className="text-sm text-gray-300 hover:translate-x-1 transition-all cursor-pointer"
                   onClick={() => setShowManageModal(true)}
@@ -113,7 +113,7 @@ export default function NavMenu() {
 
           {/* Settings */}
           <div>
-            <p className="text-gray-300 mb-2">Settings</p>
+            <p className="text-gray-300 mb-2 font-semibold">Settings</p>
             <div className="flex flex-col gap-2 ml-5 w-48">
               {/* Fetches personalization from database before opening modal */}
               <button
@@ -140,7 +140,7 @@ export default function NavMenu() {
 
           {/* Support */}
           <div>
-            <p className="text-gray-300 mb-2">Support</p>
+            <p className="text-gray-300 mb-2 font-semibold">Support</p>
             <div className="flex flex-col gap-2 ml-5 w-48">
               <a
                 href="https://twinmind.com/contact"
@@ -165,7 +165,7 @@ export default function NavMenu() {
 
           {/* Other */}
           <div>
-            <p className="text-gray-300 mb-2">Other</p>
+            <p className="text-gray-300 mb-2 font-semibold">Other</p>
             <div className="flex flex-col gap-2 ml-5 w-48">
               <a
                 href="https://twinmind.com/legal/privacy-policy"
