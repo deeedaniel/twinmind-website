@@ -65,6 +65,13 @@ export default function CaptureClient() {
   const [personalization, setPersonalization] = useState("");
   const finalTranscriptRef = useRef<string>(""); // NEW
 
+  // Questions
+  const [questions, setQuestions] = useState([]);
+  const [groupedQuestions, setGroupedQuestions] = useState<
+    Record<string, any[]>
+  >({});
+  const [selectedQuestion, setSelectedQuestion] = useState<any | null>(null);
+
   useEffect(() => {
     // Dynamically load the polyfill on client-side only
     const loadPolyfill = async () => {
@@ -81,10 +88,40 @@ export default function CaptureClient() {
     loadPolyfill();
   }, []);
 
+  const fetchQuestions = async () => {
+    const res = await fetch("/api/question");
+    const data = await res.json();
+    setQuestions(data);
+
+    // Group by date
+    const groupedByDate = data.reduce((acc: any, item: any) => {
+      const date = new Date(item.createdAt).toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      });
+
+      acc[date] = acc[date] || [];
+      acc[date].push(item);
+      return acc;
+    }, {});
+
+    setGroupedQuestions(groupedByDate);
+  };
+
+  useEffect(() => {
+    if (activeTab === "questions") {
+      fetchQuestions();
+    }
+  }, [activeTab]);
+
   const shouldStopRef = useRef(false);
 
   // This is for when user clicks out of modals to exit it
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // This is for when user clicks out of question modals
+  const questionModalRef = useRef<HTMLDivElement>(null);
 
   // Add streamRef at component level
   const streamRef = useRef<MediaStream | null>(null);
@@ -321,6 +358,25 @@ export default function CaptureClient() {
     };
   }, []);
 
+  useEffect(() => {
+    function handleClickOutsideQuestion(event: MouseEvent) {
+      if (
+        questionModalRef.current &&
+        !questionModalRef.current.contains(event.target as Node)
+      ) {
+        setSelectedQuestion(null); // close the question modal
+      }
+    }
+
+    if (selectedQuestion) {
+      document.addEventListener("mousedown", handleClickOutsideQuestion);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideQuestion);
+    };
+  }, [selectedQuestion]);
+
   // Search function (Ask all Memories)
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -338,6 +394,14 @@ export default function CaptureClient() {
 
       const data = await res.json();
       setSearchResult(data.answer);
+
+      await fetch("/api/question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: searchQuery, answer: data.answer }),
+      });
+
+      await fetchQuestions();
     } catch (err) {
       console.error("Error searching:", err);
       setSearchResult("Something went wrong. Please try again.");
@@ -585,13 +649,58 @@ export default function CaptureClient() {
               )}
                               */}
 
-              {/* Summaries tab */}
+              {/* Questions tab */}
 
               {activeTab === "questions" && (
-                <div className="p-4">
-                  <p className="text-lg font-bold text-[#0b4f75]">
-                    Coming Soon!
-                  </p>
+                <div className="p-4 mb-24">
+                  {questions.length === 0 ? (
+                    <p>No questions yet.</p>
+                  ) : (
+                    <ul className="space-y-4 max-w-[600px]">
+                      <div className="p-4 mb-24">
+                        {Object.keys(groupedQuestions).length === 0 ? (
+                          <p>No questions yet.</p>
+                        ) : (
+                          Object.entries(groupedQuestions).map(
+                            ([date, entries]) => (
+                              <div
+                                key={date}
+                                className="mb-6 md:w-[600px] w-[300px]"
+                              >
+                                <h2 className="text-lg font-bold text-[#646464]">
+                                  {date}
+                                </h2>
+                                <div className="space-y-4 mt-2">
+                                  {entries.map((q) => (
+                                    <div
+                                      key={q.id}
+                                      className="bg-white rounded-xl p-4 shadow hover:bg-gray-100 transition-all duration-300 cursor-pointer hover:translate-x-1"
+                                      onClick={() => setSelectedQuestion(q)}
+                                    >
+                                      <div className="flex items-center gap-4">
+                                        <Search
+                                          size={35}
+                                          className="text-[#757575] bg-[#cedae8] rounded-full p-2 flex-shrink-0"
+                                        />
+                                        <div className="flex flex-col overflow-hidden">
+                                          <p className="text-sm font-semibold text-gray-700 truncate">
+                                            {q.query}
+                                          </p>
+                                          <p className="text-sm mt-1 text-gray-500 truncate">
+                                            {q.answer}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )
+                          )
+                        )}
+                      </div>
+                    </ul>
+                  )}
                 </div>
               )}
 
@@ -687,6 +796,39 @@ export default function CaptureClient() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {selectedQuestion && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
+                <div
+                  className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto"
+                  ref={questionModalRef}
+                >
+                  <button
+                    onClick={() => setSelectedQuestion(null)}
+                    className="text-[#4386a6] hover:underline cursor-pointer flex items-center gap-2 transition-all duration-300 hover:translate-x-1"
+                  >
+                    <ChevronLeft /> Back
+                  </button>
+
+                  <p className="text-lg text-gray-800 whitespace-pre-wrap mt-2 font-semibold">
+                    {selectedQuestion.query}
+                  </p>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-[#0b4f75] mt-4">
+                      Response:
+                    </h3>
+                    <p className="text-md text-gray-800 whitespace-pre-wrap mt-2">
+                      {selectedQuestion.answer}
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-gray-500 mt-4">
+                    {new Date(selectedQuestion.createdAt).toLocaleString()}
+                  </p>
+                </div>
               </div>
             )}
 
