@@ -10,12 +10,6 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { format } from "date-fns";
-import AudioRecorderPolyfill from "audio-recorder-polyfill";
-
-// Testing: this is for iOS
-if (typeof window !== "undefined" && typeof MediaRecorder === "undefined") {
-  window.MediaRecorder = AudioRecorderPolyfill;
-}
 
 type Transcript = {
   id: string;
@@ -70,6 +64,22 @@ export default function CaptureClient() {
   const [showAIAnswer, setShowAIAnswer] = useState(false);
   const [personalization, setPersonalization] = useState("");
   const finalTranscriptRef = useRef<string>(""); // NEW
+
+  useEffect(() => {
+    // Dynamically load the polyfill on client-side only
+    const loadPolyfill = async () => {
+      if (
+        typeof window !== "undefined" &&
+        typeof window.MediaRecorder === "undefined"
+      ) {
+        const { default: AudioRecorderPolyfill } = await import(
+          "audio-recorder-polyfill"
+        );
+        window.MediaRecorder = AudioRecorderPolyfill;
+      }
+    };
+    loadPolyfill();
+  }, []);
 
   const shouldStopRef = useRef(false);
 
