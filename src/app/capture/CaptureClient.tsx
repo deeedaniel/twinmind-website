@@ -129,6 +129,14 @@ export default function CaptureClient() {
   // Add this with other refs at the component level
   const chunkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (transcriptEndRef.current) {
+      transcriptEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [transcript]);
+
   // First, let's extract the fetch transcripts logic into a reusable function
   const fetchTranscripts = async () => {
     const res = await fetch("/api/transcript");
@@ -756,6 +764,7 @@ export default function CaptureClient() {
                       <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
                         {transcript}
                       </p>
+                      <div ref={transcriptEndRef} />
                     </div>
                   </div>
                 )}
@@ -809,12 +818,12 @@ export default function CaptureClient() {
                     <ChevronLeft /> Back
                   </button>
 
-                  <p className="text-lg text-gray-800 whitespace-pre-wrap mt-2 font-semibold">
+                  <p className="text-lg md:text-2xl text-gray-800 whitespace-pre-wrap mt-2 font-bold">
                     {selectedQuestion.query}
                   </p>
 
                   <div>
-                    <h3 className="text-lg font-bold text-[#0b4f75] mt-4">
+                    <h3 className="text-md font-bold text-[#0b4f75]">
                       Response:
                     </h3>
                     <p className="text-md text-gray-800 whitespace-pre-wrap mt-2">

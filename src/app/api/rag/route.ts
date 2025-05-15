@@ -16,11 +16,13 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { personalization: true } as any,
+    select: { personalization: true, id: true },
   });
 
   if (!user)
     return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  const userId = user.id as string;
 
   // 1. Embed user question
   const embedRes = await fetch("https://api.openai.com/v1/embeddings", {
@@ -47,13 +49,25 @@ export async function POST(req: NextRequest) {
     ORDER BY embedding <#> ($2::vector)
     LIMIT 5
   `,
-    user.id,
+    userId,
     queryEmbedding
   );
 
-  const context = (results as { text: string }[])
-    .map((r) => r.text)
-    .join("\n\n");
+  const transcripts = results as { id: string; text: string }[];
+
+  // Log for debugging
+  console.log(
+    `Found ${transcripts.length} relevant transcripts for query: "${query}"`
+  );
+
+  if (transcripts.length === 0) {
+    return NextResponse.json({
+      answer:
+        "I don't have any relevant information from your past transcripts to answer this question.",
+    });
+  }
+
+  const context = transcripts.map((r) => r.text).join("\n\n");
 
   const personalization = user.personalization
     ? `About the user: ${user.personalization}`
@@ -61,17 +75,22 @@ export async function POST(req: NextRequest) {
 
   // 3. Send to OpenAI for final generation
   const prompt = `
+You are an AI assistant that answers questions. Base these answers on the user's past transcripts as much as possible.
 
-  You are an AI assistant that answers user questions based on past transcripts and if needed their profile information.
+ABOUT THE USER:
+${personalization}
 
-  This is information about the user: ${personalization}. 
-  These are their past transcripts: ${context}.
+RELEVANT TRANSCRIPTS:
+${context}
 
-  Relevant transcripts:
-  ${context}
+INSTRUCTIONS:
+1. Answer to the best ability based on information in the transcripts above and profile information.
+2. Do not explicity say you are basing your answer on the user's profile information.
+3. Do not make up information
+4. Be concise and direct in your answer
+5. If quoting from transcripts, indicate which part you're referencing
 
-User question: "${query}"
-Answer:
+USER QUESTION: ${query}
 `;
 
   const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -81,8 +100,9 @@ Answer:
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
+      temperature: 0.3, // Lower temperature for more focused answers
     }),
   });
 
@@ -90,6 +110,20 @@ Answer:
   const answer =
     gptData.choices?.[0]?.message?.content ||
     "Sorry, I couldn't find an answer.";
+
+  // Store the question and answer
+  try {
+    await prisma.question.create({
+      data: {
+        query,
+        answer,
+        userId: userId,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to store question/answer:", error);
+    // Continue anyway - don't fail the request if storage fails
+  }
 
   return NextResponse.json({ answer });
 }
