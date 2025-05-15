@@ -61,10 +61,14 @@ export async function POST(req: NextRequest) {
 
   // 3. Send to OpenAI for final generation
   const prompt = `
-You are an AI assistant that answers user questions based on their profile and past transcripts.
-${personalization}
-Relevant transcripts:
-${context}
+
+  You are an AI assistant that answers user questions based on past transcripts and if needed their profile information.
+
+  This is information about the user: ${personalization}. 
+  These are their past transcripts: ${context}.
+
+  Relevant transcripts:
+  ${context}
 
 User question: "${query}"
 Answer:

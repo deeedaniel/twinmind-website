@@ -57,7 +57,7 @@ export default function CaptureClient() {
   const [grouped, setGrouped] = useState<Record<string, Transcript[]>>({});
   const [selected, setSelected] = useState<Transcript | null>(null);
   const [modalTab, setModalTab] = useState<"summary" | "transcript">("summary");
-  const [showFullTranscript, setShowFullTranscript] = useState(false);
+  const [showFullTranscript, setShowFullTranscript] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
@@ -210,6 +210,11 @@ export default function CaptureClient() {
     };
 
     mediaRecorder.onstop = async () => {
+      // ✅ Reset everything, this makes is so transcript stays until a new recording starts
+      finalTranscriptRef.current = "";
+      setTranscript("");
+      setTranscriptText("");
+
       const audioBlob = new Blob(audioChunksRef.current, {
         type: "audio/wav",
       });
@@ -247,11 +252,6 @@ export default function CaptureClient() {
         });
 
         await fetchTranscripts(); // refresh UI
-
-        // ✅ Reset everything
-        finalTranscriptRef.current = "";
-        setTranscript("");
-        setTranscriptText("");
       }
 
       // Restart recorder if not stopping
@@ -416,7 +416,7 @@ export default function CaptureClient() {
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
                       <div
                         ref={modalRef}
-                        className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4"
+                        className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto"
                       >
                         <div>
                           <button
