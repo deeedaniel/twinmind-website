@@ -874,7 +874,7 @@ export default function CaptureClient() {
             {/* Live memory button (opens memory tab) */}
             {isRecording && (
               <div
-                className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-gradient-to-b from-[#1f587c] to-[#527a92] rounded-xl p-2 flex items-center gap-4 cursor-pointer w-[450px] hover:scale-105 transition-all duration-300"
+                className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-gradient-to-b from-[#1f587c] to-[#527a92] rounded-xl p-2 flex items-center gap-4 cursor-pointer w-[80vw] md:w-[450px] hover:scale-105 transition-all duration-300 md:mb-0 mb-14"
                 onClick={() => setLiveMemoryOpen(true)}
               >
                 <div className="flex flex-col items-center w-8">
@@ -962,7 +962,7 @@ export default function CaptureClient() {
             {liveMemoryOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
                 <div ref={liveMemoryRef}>
-                  <div className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
+                  <div className="bg-white w-[600px] max-w-[100vw] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
                     <div className="flex justify-between items-center">
                       <button
                         onClick={() => {
