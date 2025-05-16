@@ -99,5 +99,5 @@ Action Items (if any):
     },
   });
 
-  return NextResponse.json({ summaryText });
+  return NextResponse.json({ summaryTitle, summaryText });
 }

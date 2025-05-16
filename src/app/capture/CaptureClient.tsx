@@ -81,6 +81,7 @@ export default function CaptureClient() {
   const customNotesRef = useRef("");
 
   const [summary, setSummary] = useState("");
+  const [summaryTitle, setSummaryTitle] = useState("");
 
   useEffect(() => {
     // Dynamically load the polyfill on client-side only
@@ -334,7 +335,8 @@ export default function CaptureClient() {
           }),
         });
 
-        const { summaryText } = await summaryRes.json();
+        const { summaryTitle, summaryText } = await summaryRes.json();
+        setSummaryTitle(summaryTitle);
         setSummary(summaryText);
 
         await fetchTranscripts();
@@ -537,8 +539,7 @@ export default function CaptureClient() {
                                 </span>
                               </div>
                               <span className="font-medium text-gray-800 truncate">
-                                {entry.summary?.summaryTitle ||
-                                  "Untitled Memory"}
+                                {entry.summary?.summaryTitle || "Untitled"}
                               </span>
                             </div>
                           </div>
@@ -565,8 +566,7 @@ export default function CaptureClient() {
 
                         <div>
                           <h3 className="text-xl font-bold mb-2 text-[#0b4f75]">
-                            {selected.summary?.summaryTitle ||
-                              "Untitled Memory"}
+                            {selected.summary?.summaryTitle || "Untitled"}
                           </h3>
                           <p className="text-sm text-[#909090] mb-4 font-semibold">
                             {format(
@@ -847,8 +847,8 @@ export default function CaptureClient() {
                     {format(new Date(), "aaa")}
                   </span>
                 </div>
-                <p className="text-white  font-semibold">
-                  {customTitle || "Untitled"}
+                <p className="text-white  font-semibold truncate">
+                  {customTitle || summaryTitle || "Untitled"}
                 </p>
               </div>
             )}
@@ -901,6 +901,7 @@ export default function CaptureClient() {
                       finalTranscriptRef.current = "";
                       setTranscript("");
                       setSummary("");
+                      setSummaryTitle("");
                     }}
                     className="flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-3 py-2 gap-2 text-sm sm:text-base font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
                   >
@@ -937,18 +938,23 @@ export default function CaptureClient() {
                       </button>
                     ) : null}
                   </div>
-
                   <div>
-                    <input
-                      type="text"
-                      className="text-xl font-bold mb-2 text-[#0b4f75] w-full"
-                      placeholder="Untitled"
-                      value={customTitle}
-                      onChange={(e) => {
-                        setCustomTitle(e.target.value);
-                        customTitleRef.current = e.target.value;
-                      }}
-                    />
+                    {summaryTitle && !customTitle ? (
+                      <p className="text-xl font-bold mb-2 text-[#0b4f75] w-full">
+                        {summaryTitle}
+                      </p>
+                    ) : (
+                      <input
+                        type="text"
+                        className="text-xl font-bold mb-2 text-[#0b4f75] w-full"
+                        placeholder="Untitled"
+                        value={customTitle}
+                        onChange={(e) => {
+                          setCustomTitle(e.target.value);
+                          customTitleRef.current = e.target.value;
+                        }}
+                      />
+                    )}
                     <p className="text-sm text-[#909090] mb-4 font-semibold">
                       {format(new Date(), "MMM d, yyyy '·' h:mm aaa")}
                     </p>
