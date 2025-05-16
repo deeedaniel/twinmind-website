@@ -52,7 +52,6 @@ export default function CaptureClient() {
   const [isCalendarLoading, setIsCalendarLoading] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
   // const [summaries, setSummaries] = useState<Summary[]>([]);
-  const [transcriptText, setTranscriptText] = useState("");
   const [data, setData] = useState<Transcript[]>([]);
   const [grouped, setGrouped] = useState<Record<string, Transcript[]>>({});
   const [selected, setSelected] = useState<Transcript | null>(null);
@@ -293,12 +292,19 @@ export default function CaptureClient() {
       const data = await res.json();
       const fullText = (data.text || "").trim();
 
-      finalTranscriptRef.current += " " + fullText; // ✅ accumulate full transcript
+      // finalTranscriptRef.current += " " + fullText; // ✅ accumulate full transcript
 
       // Condition to check if prev is not empty
       // Avoids blank space in the beginning for no reason
-      setTranscript((prev) => (prev ? prev + " " + fullText : fullText));
-      setTranscriptText((prev) => (prev ? prev + " " + fullText : fullText));
+      // setTranscript((prev) => (prev ? prev + " " + fullText : fullText));
+
+      if (!shouldStopRef.current) {
+        finalTranscriptRef.current += " " + fullText;
+        setTranscript((prev) => (prev ? prev + " " + fullText : fullText));
+      } else {
+        finalTranscriptRef.current += fullText;
+        setTranscript((prev) => (prev ? " " + fullText : fullText));
+      }
 
       // ✅ Only save once if this was the final stop
       if (shouldStopRef.current && finalTranscriptRef.current.trim()) {
@@ -866,7 +872,9 @@ export default function CaptureClient() {
                 {/* Capture buttons */}
                 {isRecording ? (
                   <button
-                    onClick={stopRecording}
+                    onClick={() => {
+                      stopRecording();
+                    }}
                     className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full px-3 py-2 gap-2 text-sm sm:text-base font-semibold shadow-md cursor-pointer hover:scale-105 transition-all duration-300"
                   >
                     <CircleStop size={18} /> Stop
@@ -884,7 +892,6 @@ export default function CaptureClient() {
                       customNotesRef.current = "";
                       finalTranscriptRef.current = "";
                       setTranscript("");
-                      setTranscriptText("");
                       setSummary("");
                     }}
                     className="flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-3 py-2 gap-2 text-sm sm:text-base font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
@@ -904,7 +911,6 @@ export default function CaptureClient() {
                   <div className="flex justify-between items-center">
                     <button
                       onClick={() => {
-                        // stopRecording();
                         setLiveMemoryOpen(false);
                         setModalTab("transcript");
                       }}
@@ -914,7 +920,9 @@ export default function CaptureClient() {
                     </button>
                     {isRecording ? (
                       <button
-                        onClick={stopRecording}
+                        onClick={() => {
+                          stopRecording();
+                        }}
                         className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full p-2 gap-2 text-sm sm:text-base font-semibold shadow-md cursor-pointer hover:scale-105 transition-all duration-300"
                       >
                         <CircleStop size={30} />
