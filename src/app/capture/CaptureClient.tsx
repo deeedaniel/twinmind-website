@@ -1099,7 +1099,7 @@ export default function CaptureClient() {
                   </div>
                   <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-full max-w-md px-4 z-10">
                     {chatResult && !chatLoading && (
-                      <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] mb-12 md:mb-0">
+                      <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] translate-y-4 md:translate-y-0">
                         <div className="flex justify-between items-center">
                           <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
                             TwinMind Answer:
@@ -1153,7 +1153,11 @@ export default function CaptureClient() {
             {/* TwinMind ask all memories results */}
             <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-full max-w-md px-4 z-10">
               {searchResult && !searchLoading && (
-                <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] mb-12 md:mb-0">
+                <div
+                  className={`bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] ${
+                    isRecording ? "mb-28 md:mb-12" : "mb-12 md:mb-0"
+                  }`}
+                >
                   <div className="flex justify-between items-center">
                     <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
                       TwinMind Answer:
