@@ -111,6 +111,8 @@ USER QUESTION: ${query}
     gptData.choices?.[0]?.message?.content ||
     "Sorry, I couldn't find an answer.";
 
+  console.log("BACKENDRAG: ", answer);
+
   // Store the question and answer
   try {
     await prisma.question.create({

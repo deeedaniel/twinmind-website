@@ -34,7 +34,9 @@ export async function POST(req: NextRequest) {
         {
           role: "user",
           parts: [
-            { text: "Generate a transcript of the speech." },
+            {
+              text: "Generate a transcript of the speech. If there no words, return a single pair of quotes",
+            },
             {
               inlineData: {
                 mimeType: "audio/wav",

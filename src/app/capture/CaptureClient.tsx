@@ -56,7 +56,9 @@ export default function CaptureClient() {
   const [data, setData] = useState<Transcript[]>([]);
   const [grouped, setGrouped] = useState<Record<string, Transcript[]>>({});
   const [selected, setSelected] = useState<Transcript | null>(null);
-  const [modalTab, setModalTab] = useState<"summary" | "transcript">("summary");
+  const [modalTab, setModalTab] = useState<"summary" | "transcript" | "notes">(
+    "summary"
+  );
   const [showFullTranscript, setShowFullTranscript] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState("");
@@ -71,6 +73,15 @@ export default function CaptureClient() {
     Record<string, any[]>
   >({});
   const [selectedQuestion, setSelectedQuestion] = useState<any | null>(null);
+
+  // Live Memory Page
+  const [liveMemoryOpen, setLiveMemoryOpen] = useState(false);
+  const [customTitle, setCustomTitle] = useState("");
+  const [customNotes, setCustomNotes] = useState("");
+  const customTitleRef = useRef("");
+  const customNotesRef = useRef("");
+
+  const [summary, setSummary] = useState("");
 
   useEffect(() => {
     // Dynamically load the polyfill on client-side only
@@ -89,6 +100,11 @@ export default function CaptureClient() {
   }, []);
 
   const fetchQuestions = async () => {
+    console.log("Sending to summary:", {
+      title: customTitle,
+      notes: customNotes,
+    });
+
     const res = await fetch("/api/question");
     const data = await res.json();
     setQuestions(data);
@@ -122,6 +138,9 @@ export default function CaptureClient() {
 
   // This is for when user clicks out of question modals
   const questionModalRef = useRef<HTMLDivElement>(null);
+
+  // This is for when user clicks out of live memory modal
+  const liveMemoryRef = useRef<HTMLDivElement>(null);
 
   // Add streamRef at component level
   const streamRef = useRef<MediaStream | null>(null);
@@ -234,11 +253,13 @@ export default function CaptureClient() {
   // Start recording function
   const startRecording = async () => {
     // Clear any existing interval first
+
     if (chunkIntervalRef.current) {
       clearInterval(chunkIntervalRef.current);
       chunkIntervalRef.current = null;
     }
 
+    setLiveMemoryOpen(true);
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const mediaRecorder = new MediaRecorder(stream);
 
@@ -289,11 +310,18 @@ export default function CaptureClient() {
 
         const { transcriptId } = await saveRes.json();
 
-        await fetch("/api/summary", {
+        const summaryRes = await fetch("/api/summary", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ transcriptId }),
+          body: JSON.stringify({
+            transcriptId,
+            title: customTitleRef.current.trim(),
+            notes: customNotesRef.current.trim(),
+          }),
         });
+
+        const { summaryText } = await summaryRes.json();
+        setSummary(summaryText);
 
         await fetchTranscripts(); // refresh UI
       }
@@ -344,8 +372,6 @@ export default function CaptureClient() {
     }
 
     setIsRecording(false);
-
-    // ❌ No need to save here. The final `onstop` handles it.
   };
 
   useEffect(() => {
@@ -364,6 +390,25 @@ export default function CaptureClient() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    function handleClickOutsideLiveMemory(event: MouseEvent) {
+      if (
+        liveMemoryRef.current &&
+        !liveMemoryRef.current.contains(event.target as Node)
+      ) {
+        setLiveMemoryOpen(false);
+      }
+    }
+
+    if (liveMemoryOpen) {
+      document.addEventListener("mousedown", handleClickOutsideLiveMemory);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideLiveMemory);
+    };
+  }, [liveMemoryOpen]);
 
   useEffect(() => {
     function handleClickOutsideQuestion(event: MouseEvent) {
@@ -400,6 +445,9 @@ export default function CaptureClient() {
       });
 
       const data = await res.json();
+
+      console.log("RAG: ", data);
+
       setSearchResult(data.answer);
 
       await fetch("/api/question", {
@@ -460,7 +508,10 @@ export default function CaptureClient() {
                           <div
                             key={entry.id}
                             className="cursor-pointer shadow-sm bg-white px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:translate-x-1"
-                            onClick={() => setSelected(entry)}
+                            onClick={() => {
+                              setSelected(entry);
+                              setModalTab("summary");
+                            }}
                           >
                             <div className="flex gap-6 items-center">
                               <div className="flex flex-col items-center w-8">
@@ -482,7 +533,7 @@ export default function CaptureClient() {
                     </div>
                   ))}
 
-                  {/* Modal */}
+                  {/* Memory Page Modal */}
                   {selected && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
                       <div
@@ -524,7 +575,7 @@ export default function CaptureClient() {
                                 : "bg-[#eeeeee] text-[#656565]"
                             }`}
                           >
-                            Summary
+                            Notes
                           </button>
                           <button
                             onClick={() => setModalTab("transcript")}
@@ -736,87 +787,6 @@ export default function CaptureClient() {
                 </ul>
                 */}
             </div>
-
-            {/* Transcript and search results - Made responsive */}
-            {(transcript || searchResult) && (
-              <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-full max-w-md px-4 z-10">
-                {/* Transcript */}
-                {transcript && (
-                  <div
-                    className={`bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] ${
-                      searchResult ? "mb-0" : "mb-12 mb:0"
-                    } sm:mb-0`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
-                        Live Transcript:
-                      </p>
-                      <button
-                        onClick={() => setShowFullTranscript((prev) => !prev)}
-                        className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
-                      >
-                        {showFullTranscript ? (
-                          <div className="flex items-center gap-1 cursor-pointer">
-                            Minimize <ChevronDown size={16} />
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 cursor-pointer">
-                            Expand <ChevronUp size={16} />
-                          </div>
-                        )}
-                      </button>
-                    </div>
-                    <div
-                      className={`${
-                        showFullTranscript
-                          ? "max-h-40 sm:max-h-60 mt-2"
-                          : "max-h-0"
-                      } overflow-y-auto pr-1 transition-all duration-300`}
-                    >
-                      <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
-                        {transcript}
-                      </p>
-                      <div ref={transcriptEndRef} />
-                    </div>
-                  </div>
-                )}
-
-                {/* AI Answer */}
-                {searchResult && !searchLoading && (
-                  <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] mb-12 md:mb-0">
-                    <div className="flex justify-between items-center">
-                      <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
-                        TwinMind Answer:
-                      </p>
-                      <button
-                        onClick={() => setShowAIAnswer((prev) => !prev)}
-                        className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
-                      >
-                        {showAIAnswer ? (
-                          <div className="flex items-center gap-1 cursor-pointer">
-                            Minimize <ChevronDown size={16} />
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1 cursor-pointer">
-                            Expand <ChevronUp size={16} />
-                          </div>
-                        )}
-                      </button>
-                    </div>
-                    <div
-                      className={`${
-                        showAIAnswer ? "max-h-40 sm:max-h-60 mt-2" : "max-h-0"
-                      } overflow-y-auto pr-1 transition-all duration-300`}
-                    >
-                      <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
-                        {searchResult}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
             {selectedQuestion && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
                 <div
@@ -849,8 +819,26 @@ export default function CaptureClient() {
                 </div>
               </div>
             )}
-
-            {/* Bottom controls - Made responsive */}
+            {/* Live memory button (opens memory tab) */}
+            {isRecording && (
+              <div
+                className="fixed bottom-28 left-1/2 -translate-x-1/2 bg-gradient-to-b from-[#1f587c] to-[#527a92] rounded-xl p-2 flex items-center gap-4 cursor-pointer w-[450px] hover:scale-105 transition-all duration-300"
+                onClick={() => setLiveMemoryOpen(true)}
+              >
+                <div className="flex flex-col items-center w-8">
+                  <span className="text-sm text-white">
+                    {format(new Date(), "h:mm")}
+                  </span>
+                  <span className="text-sm text-white uppercase">
+                    {format(new Date(), "aaa")}
+                  </span>
+                </div>
+                <p className="text-white  font-semibold">
+                  {customTitle || "Untitled"}
+                </p>
+              </div>
+            )}
+            {/* Bottom controls */}
             <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-md px-16 md:px-0 scale-125 md:scale-100">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Ask All Memories button */}
@@ -886,10 +874,18 @@ export default function CaptureClient() {
                 ) : (
                   <button
                     onClick={() => {
+                      // Later uncomment this and  remove setIsRecording(true)
                       startRecording();
+                      // setIsRecording(true);
+                      setLiveMemoryOpen(true);
+                      setCustomTitle("");
+                      setCustomNotes("");
+                      customTitleRef.current = "";
+                      customNotesRef.current = "";
                       finalTranscriptRef.current = "";
                       setTranscript("");
                       setTranscriptText("");
+                      setSummary("");
                     }}
                     className="flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-3 py-2 gap-2 text-sm sm:text-base font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
                   >
@@ -897,6 +893,151 @@ export default function CaptureClient() {
                   </button>
                 )}
               </div>
+            </div>
+            '{/* Live Memory Modal */}
+            {liveMemoryOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
+                <div
+                  className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto"
+                  ref={liveMemoryRef}
+                >
+                  <div className="flex justify-between items-center">
+                    <button
+                      onClick={() => {
+                        // stopRecording();
+                        setLiveMemoryOpen(false);
+                        setModalTab("transcript");
+                      }}
+                      className="text-[#4386a6] hover:underline cursor-pointer flex items-center gap-2 transition-all duration-300 hover:translate-x-1"
+                    >
+                      <ChevronLeft /> Back
+                    </button>
+                    {isRecording ? (
+                      <button
+                        onClick={stopRecording}
+                        className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full p-2 gap-2 text-sm sm:text-base font-semibold shadow-md cursor-pointer hover:scale-105 transition-all duration-300"
+                      >
+                        <CircleStop size={30} />
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      className="text-xl font-bold mb-2 text-[#0b4f75] w-full"
+                      placeholder="Untitled"
+                      value={customTitle}
+                      onChange={(e) => {
+                        setCustomTitle(e.target.value);
+                        customTitleRef.current = e.target.value;
+                      }}
+                    />
+                    <p className="text-sm text-[#909090] mb-4 font-semibold">
+                      {format(new Date(), "MMM d, yyyy '·' h:mm aaa")}
+                    </p>
+                  </div>
+
+                  <div className="flex mb-2 space-x-4">
+                    <button
+                      onClick={() => setModalTab("summary")}
+                      className={`px-4 py-1 rounded-full  cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
+                        modalTab === "summary"
+                          ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                          : "bg-[#eeeeee] text-[#656565]"
+                      }`}
+                    >
+                      Summary
+                    </button>
+                    <button
+                      onClick={() => setModalTab("notes")}
+                      className={`px-4 py-1 rounded-full cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
+                        modalTab === "notes"
+                          ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                          : "bg-[#eeeeee] text-[#656565]"
+                      }`}
+                    >
+                      Notes
+                    </button>
+                    <button
+                      onClick={() => setModalTab("transcript")}
+                      className={`px-4 py-1 rounded-full cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
+                        modalTab === "transcript"
+                          ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                          : "bg-[#eeeeee] text-[#656565]"
+                      }`}
+                    >
+                      Transcript
+                    </button>
+                  </div>
+
+                  <div className="max-h-100 overflow-y-auto pr-2">
+                    {modalTab === "summary" ? (
+                      summary ? (
+                        <p className="text-gray-800 whitespace-pre-wrap">
+                          {summary}
+                        </p>
+                      ) : (
+                        <p className="text-gray-800 whitespace-pre-wrap">
+                          Transcribing in the background. When you stop the
+                          summary will appear.
+                        </p>
+                      )
+                    ) : modalTab === "notes" ? (
+                      <textarea
+                        className="text-gray-800 w-full rounded-lg p-2"
+                        placeholder="A summary will appear when you stop recording. But you can write your own notes in the meantime!"
+                        value={customNotes}
+                        onChange={(e) => {
+                          setCustomNotes(e.target.value);
+                          customNotesRef.current = e.target.value;
+                        }}
+                      />
+                    ) : (
+                      <p className="text-gray-800 whitespace-pre-wrap">
+                        {transcript}
+                      </p>
+                    )}
+                  </div>
+
+                  <div ref={transcriptEndRef} />
+                </div>
+              </div>
+            )}
+            {/* TwinMind ask all memories results */}
+            <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-full max-w-md px-4 z-10">
+              {searchResult && !searchLoading && (
+                <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] mb-12 md:mb-0">
+                  <div className="flex justify-between items-center">
+                    <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
+                      TwinMind Answer:
+                    </p>
+                    <button
+                      onClick={() => setShowAIAnswer((prev) => !prev)}
+                      className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                    >
+                      {showAIAnswer ? (
+                        <div className="flex items-center gap-1 cursor-pointer">
+                          Minimize <ChevronDown size={16} />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 cursor-pointer">
+                          Expand <ChevronUp size={16} />
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                  <div
+                    className={`${
+                      showAIAnswer ? "max-h-40 sm:max-h-60 mt-2" : "max-h-0"
+                    } overflow-y-auto pr-1 transition-all duration-300`}
+                  >
+                    <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
+                      {searchResult}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
