@@ -1155,7 +1155,9 @@ export default function CaptureClient() {
               {searchResult && !searchLoading && (
                 <div
                   className={`bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] ${
-                    isRecording ? "mb-28 md:mb-12" : "mb-12 md:mb-0"
+                    isRecording
+                      ? "-translate-y-28 md:-translate-y-12"
+                      : "-translate-y-12 md:-translate-y-0"
                   }`}
                 >
                   <div className="flex justify-between items-center">
