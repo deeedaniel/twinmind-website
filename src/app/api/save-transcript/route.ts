@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
   if (!text)
     return NextResponse.json({ error: "Missing text" }, { status: 400 });
 
+  console.log("save-transcript", text);
+
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
   });

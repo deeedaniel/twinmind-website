@@ -302,17 +302,24 @@ export default function CaptureClient() {
         finalTranscriptRef.current += " " + fullText;
         setTranscript((prev) => (prev ? prev + " " + fullText : fullText));
       } else {
-        finalTranscriptRef.current += fullText;
+        finalTranscriptRef.current = fullText;
         setTranscript((prev) => (prev ? " " + fullText : fullText));
       }
 
       // ✅ Only save once if this was the final stop
       if (shouldStopRef.current && finalTranscriptRef.current.trim()) {
-        finalTranscriptRef.current = transcript;
+        const cleanText = finalTranscriptRef.current.trim();
+
+        await fetch("/api/save-transcript", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: cleanText }),
+        });
+
         const saveRes = await fetch("/api/save-transcript", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: finalTranscriptRef.current.trim() }),
+          body: JSON.stringify({ text: cleanText }),
         });
 
         const { transcriptId } = await saveRes.json();
@@ -330,7 +337,7 @@ export default function CaptureClient() {
         const { summaryText } = await summaryRes.json();
         setSummary(summaryText);
 
-        await fetchTranscripts(); // refresh UI
+        await fetchTranscripts();
       }
 
       // Restart recorder if not stopping
