@@ -8,8 +8,10 @@ import {
   ChevronLeft,
   ChevronDown,
   ChevronUp,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
+import AnimatedEllipsis from "../components/AnimatedEllipsis";
 
 type Transcript = {
   id: string;
@@ -82,6 +84,11 @@ export default function CaptureClient() {
 
   const [summary, setSummary] = useState("");
   const [summaryTitle, setSummaryTitle] = useState("");
+
+  const [chatQuery, setChatQuery] = useState("");
+  const [chatResult, setChatResult] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [showChatAnswer, setShowChatAnswer] = useState(false);
 
   useEffect(() => {
     // Dynamically load the polyfill on client-side only
@@ -481,6 +488,37 @@ export default function CaptureClient() {
     }
   };
 
+  const handleChat = async () => {
+    if (!chatQuery.trim()) return;
+
+    setChatLoading(true);
+    setShowChatAnswer(true);
+    setChatResult("");
+
+    try {
+      const res = await fetch("/api/ask-live", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: chatQuery, transcript: transcript }),
+      });
+
+      const data = await res.json();
+
+      setChatResult(data.answer);
+
+      await fetch("/api/question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: searchQuery, answer: data.answer }),
+      });
+    } catch (err) {
+      console.error("Error chatting:", err);
+      setChatResult("Something went wrong. Please try again.");
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen">
@@ -860,16 +898,24 @@ export default function CaptureClient() {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         handleSearch();
+                        setSearchQuery("");
                       }
                     }}
                     placeholder="Ask All Memories"
                     className="w-full pr-10 bg-[#e8edee] text-[#0b4f75] rounded-full px-3 py-2 text-sm sm:text-base font-semibold shadow-md border-2 border-[#c8d1dd] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0b4f75]"
                   />
-                  <button onClick={handleSearch}>
+                  <button
+                    onClick={() => {
+                      handleSearch();
+                      setSearchQuery("");
+                    }}
+                  >
                     <Search
                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0b4f75] cursor-pointer"
                       size={18}
@@ -902,6 +948,8 @@ export default function CaptureClient() {
                       setTranscript("");
                       setSummary("");
                       setSummaryTitle("");
+                      setChatResult("");
+                      setShowAIAnswer(false);
                     }}
                     className="flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-3 py-2 gap-2 text-sm sm:text-base font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
                   >
@@ -913,116 +961,192 @@ export default function CaptureClient() {
             '{/* Live Memory Modal */}
             {liveMemoryOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
-                <div
-                  className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto"
-                  ref={liveMemoryRef}
-                >
-                  <div className="flex justify-between items-center">
-                    <button
-                      onClick={() => {
-                        setLiveMemoryOpen(false);
-                        setModalTab("transcript");
-                      }}
-                      className="text-[#4386a6] hover:underline cursor-pointer flex items-center gap-2 transition-all duration-300 hover:translate-x-1"
-                    >
-                      <ChevronLeft /> Back
-                    </button>
-                    {isRecording ? (
+                <div ref={liveMemoryRef}>
+                  <div className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
+                    <div className="flex justify-between items-center">
                       <button
                         onClick={() => {
-                          stopRecording();
+                          setLiveMemoryOpen(false);
+                          setModalTab("transcript");
                         }}
-                        className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full p-2 gap-2 text-sm sm:text-base font-semibold shadow-md cursor-pointer hover:scale-105 transition-all duration-300"
+                        className="text-[#4386a6] hover:underline cursor-pointer flex items-center gap-2 transition-all duration-300 hover:translate-x-1"
                       >
-                        <CircleStop size={30} />
+                        <ChevronLeft /> Back
                       </button>
-                    ) : null}
-                  </div>
-                  <div>
-                    {summaryTitle && !customTitle ? (
-                      <p className="text-xl font-bold mb-2 text-[#0b4f75] w-full">
-                        {summaryTitle}
-                      </p>
-                    ) : (
-                      <input
-                        type="text"
-                        className="text-xl font-bold mb-2 text-[#0b4f75] w-full"
-                        placeholder="Untitled"
-                        value={customTitle}
-                        onChange={(e) => {
-                          setCustomTitle(e.target.value);
-                          customTitleRef.current = e.target.value;
-                        }}
-                      />
-                    )}
-                    <p className="text-sm text-[#909090] mb-4 font-semibold">
-                      {format(new Date(), "MMM d, yyyy '·' h:mm aaa")}
-                    </p>
-                  </div>
-
-                  <div className="flex mb-2 space-x-4">
-                    <button
-                      onClick={() => setModalTab("summary")}
-                      className={`px-4 py-1 rounded-full  cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
-                        modalTab === "summary"
-                          ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
-                          : "bg-[#eeeeee] text-[#656565]"
-                      }`}
-                    >
-                      Summary
-                    </button>
-                    <button
-                      onClick={() => setModalTab("notes")}
-                      className={`px-4 py-1 rounded-full cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
-                        modalTab === "notes"
-                          ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
-                          : "bg-[#eeeeee] text-[#656565]"
-                      }`}
-                    >
-                      Notes
-                    </button>
-                    <button
-                      onClick={() => setModalTab("transcript")}
-                      className={`px-4 py-1 rounded-full cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
-                        modalTab === "transcript"
-                          ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
-                          : "bg-[#eeeeee] text-[#656565]"
-                      }`}
-                    >
-                      Transcript
-                    </button>
-                  </div>
-
-                  <div className="max-h-100 overflow-y-auto pr-2">
-                    {modalTab === "summary" ? (
-                      summary ? (
-                        <p className="text-gray-800 whitespace-pre-wrap">
-                          {summary}
+                      {isRecording ? (
+                        <button
+                          onClick={() => {
+                            stopRecording();
+                          }}
+                          className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full p-2 gap-2 text-sm sm:text-base font-semibold shadow-md cursor-pointer hover:scale-105 transition-all duration-300"
+                        >
+                          <CircleStop size={30} />
+                        </button>
+                      ) : null}
+                    </div>
+                    <div>
+                      {summaryTitle && !customTitle ? (
+                        <p className="text-xl font-bold mb-2 text-[#0b4f75] w-full">
+                          {summaryTitle}
                         </p>
                       ) : (
-                        <p className="text-gray-800 whitespace-pre-wrap">
-                          Transcribing in the background. When you stop the
-                          summary will appear.
-                        </p>
-                      )
-                    ) : modalTab === "notes" ? (
-                      <textarea
-                        className="text-gray-800 w-full rounded-lg p-2"
-                        placeholder="A summary will appear when you stop recording. But you can write your own notes in the meantime!"
-                        value={customNotes}
-                        onChange={(e) => {
-                          setCustomNotes(e.target.value);
-                          customNotesRef.current = e.target.value;
-                        }}
-                      />
-                    ) : (
-                      <p className="text-gray-800 whitespace-pre-wrap">
-                        {transcript}
+                        <input
+                          type="text"
+                          className="text-xl font-bold mb-2 text-[#0b4f75] w-full"
+                          placeholder="Untitled"
+                          value={customTitle}
+                          onChange={(e) => {
+                            setCustomTitle(e.target.value);
+                            customTitleRef.current = e.target.value;
+                          }}
+                        />
+                      )}
+                      <p className="text-sm text-[#909090] mb-4 font-semibold">
+                        {format(new Date(), "MMM d, yyyy '·' h:mm aaa")}
                       </p>
+                    </div>
+
+                    <div className="flex mb-2 sm:space-x-4 md:translate-x-0 -translate-x-3 space-x-2">
+                      <button
+                        onClick={() => setModalTab("summary")}
+                        className={`px-4 py-1 rounded-full  cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
+                          modalTab === "summary"
+                            ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                            : "bg-[#eeeeee] text-[#656565]"
+                        }`}
+                      >
+                        Summary
+                      </button>
+                      <button
+                        onClick={() => setModalTab("notes")}
+                        className={`px-4 py-1 rounded-full cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
+                          modalTab === "notes"
+                            ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                            : "bg-[#eeeeee] text-[#656565]"
+                        }`}
+                      >
+                        Notes
+                      </button>
+                      <button
+                        onClick={() => setModalTab("transcript")}
+                        className={`px-4 py-1 rounded-full cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
+                          modalTab === "transcript"
+                            ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                            : "bg-[#eeeeee] text-[#656565]"
+                        }`}
+                      >
+                        Transcript
+                      </button>
+                    </div>
+
+                    <div className="max-h-100 overflow-y-auto pr-2 ">
+                      {modalTab === "summary" ? (
+                        summary ? (
+                          <p className="text-gray-800 whitespace-pre-wrap">
+                            {summary}
+                          </p>
+                        ) : (
+                          <p className="text-gray-800 whitespace-pre-wrap">
+                            Transcribing in the background. When you stop the
+                            summary will appear.
+                          </p>
+                        )
+                      ) : modalTab === "notes" ? (
+                        <textarea
+                          className="text-gray-800 w-full rounded-lg p-2"
+                          placeholder="A summary will appear when you stop recording. But you can write your own notes in the meantime!"
+                          value={customNotes}
+                          onChange={(e) => {
+                            setCustomNotes(e.target.value);
+                            customNotesRef.current = e.target.value;
+                          }}
+                        />
+                      ) : (
+                        <p className="text-gray-800 whitespace-pre-wrap">
+                          {transcript}
+                        </p>
+                      )}
+                    </div>
+                    <div ref={transcriptEndRef} />
+                  </div>
+                  <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-md px-16 md:px-0 scale-125 md:scale-100">
+                    <div className="relative w-full">
+                      <input
+                        type="text"
+                        value={chatQuery}
+                        onChange={(e) => setChatQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleChat();
+                            setChatQuery("");
+                          }
+                        }}
+                        placeholder="Chat with Transcript"
+                        className="w-full pr-10 bg-[#e8edee] text-[#0b4f75] rounded-full px-3 py-2 text-sm sm:text-base font-semibold shadow-md border-2 border-[#c8d1dd] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0b4f75]"
+                      />
+                      <button
+                        onClick={() => {
+                          handleChat();
+                          setChatQuery("");
+                        }}
+                      >
+                        <Search
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0b4f75] cursor-pointer"
+                          size={18}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-full max-w-md px-4 z-10">
+                    {chatResult && !chatLoading && (
+                      <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] mb-12 md:mb-0">
+                        <div className="flex justify-between items-center">
+                          <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
+                            TwinMind Answer:
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setShowChatAnswer((prev) => !prev)}
+                              className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                            >
+                              {showChatAnswer ? (
+                                <div className="flex items-center gap-1 cursor-pointer">
+                                  Minimize <ChevronDown size={16} />
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 cursor-pointer">
+                                  Expand <ChevronUp size={16} />
+                                </div>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setChatResult("")}
+                              className="hover:bg-[#c8d1dd] rounded-full p-1 duration-200 transition-all"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          className={`${
+                            showChatAnswer
+                              ? "max-h-40 sm:max-h-60 mt-2"
+                              : "max-h-0"
+                          } overflow-y-auto pr-1 transition-all duration-300`}
+                        >
+                          <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
+                            {chatLoading ? (
+                              <>
+                                <AnimatedEllipsis />
+                              </>
+                            ) : (
+                              chatResult
+                            )}
+                          </p>
+                        </div>
+                      </div>
                     )}
                   </div>
-
-                  <div ref={transcriptEndRef} />
                 </div>
               </div>
             )}
@@ -1034,20 +1158,28 @@ export default function CaptureClient() {
                     <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
                       TwinMind Answer:
                     </p>
-                    <button
-                      onClick={() => setShowAIAnswer((prev) => !prev)}
-                      className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
-                    >
-                      {showAIAnswer ? (
-                        <div className="flex items-center gap-1 cursor-pointer">
-                          Minimize <ChevronDown size={16} />
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 cursor-pointer">
-                          Expand <ChevronUp size={16} />
-                        </div>
-                      )}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowAIAnswer((prev) => !prev)}
+                        className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                      >
+                        {showAIAnswer ? (
+                          <div className="flex items-center gap-1 cursor-pointer">
+                            Minimize <ChevronDown size={16} />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 cursor-pointer">
+                            Expand <ChevronUp size={16} />
+                          </div>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setSearchResult("")}
+                        className="hover:bg-[#c8d1dd] rounded-full p-1 duration-200 transition-all"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
                   </div>
                   <div
                     className={`${
@@ -1055,7 +1187,13 @@ export default function CaptureClient() {
                     } overflow-y-auto pr-1 transition-all duration-300`}
                   >
                     <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
-                      {searchResult}
+                      {searchLoading ? (
+                        <>
+                          <AnimatedEllipsis />
+                        </>
+                      ) : (
+                        searchResult
+                      )}
                     </p>
                   </div>
                 </div>

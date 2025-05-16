@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   if (!session || !session.user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { query } = await req.json();
+  const { query, transcript } = await req.json();
   if (!query)
     return NextResponse.json({ error: "Missing query" }, { status: 400 });
 
@@ -24,71 +24,26 @@ export async function POST(req: NextRequest) {
 
   const userId = user.id as string;
 
-  // 1. Embed user question
-  const embedRes = await fetch("https://api.openai.com/v1/embeddings", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY!}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "text-embedding-ada-002",
-      input: query,
-    }),
-  });
-
-  const embedJson = await embedRes.json();
-  const queryEmbedding = embedJson.data[0].embedding;
-
-  // 2. Query top 5 similar transcripts
-  const results = await prisma.$queryRawUnsafe(
-    `
-    SELECT id, text
-    FROM "Transcript"
-    WHERE "userId" = $1 AND embedding IS NOT NULL
-    ORDER BY embedding <#> ($2::vector)
-    LIMIT 5
-  `,
-    userId,
-    queryEmbedding
-  );
-
-  const transcripts = results as { id: string; text: string }[];
-
-  // Log for debugging
-  console.log(
-    `Found ${transcripts.length} relevant transcripts for query: "${query}"`
-  );
-
-  if (transcripts.length === 0) {
-    return NextResponse.json({
-      answer:
-        "I don't have any relevant information from your past transcripts to answer this question.",
-    });
-  }
-
-  const context = transcripts.map((r) => r.text).join("\n\n");
-
   const personalization = user.personalization
     ? `About the user: ${user.personalization}`
     : "";
 
   // 3. Send to OpenAI for final generation
   const prompt = `
-You are an AI assistant that answers questions. Base these answers on the user's past transcripts as much as possible. These transcripts can be from lectures, meetings, conversations, or even the user themselves.
+You are an AI assistant that answers questions. Base these answers on the user's transcript as much as possible.This transcript can be from  a lecture, a meeting, a conversation, or even the user themselves.
 
 ABOUT THE USER:
 ${personalization}
 
-RELEVANT TRANSCRIPTS:
-${context}
+RELEVANT TRANSCRIPT:
+${transcript}
 
 INSTRUCTIONS:
-1. Answer to the best ability based on information in the transcripts above and profile information.
+1. Answer to the best ability based on information in the transcript above and profile information.
 2. Do not explicity say you are basing your answer on the user's profile information.
-3. Do not make up information
-4. Be concise and direct in your answer
-5. If quoting from transcripts, indicate which part you're referencing
+3. Do not make up information.
+4. Be concise and direct in your answer.
+5. If quoting from transcript, indicate which part you're referencing.
 
 USER QUESTION: ${query}
 `;
