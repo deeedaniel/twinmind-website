@@ -308,6 +308,7 @@ export default function CaptureClient() {
 
       // ✅ Only save once if this was the final stop
       if (shouldStopRef.current && finalTranscriptRef.current.trim()) {
+        finalTranscriptRef.current = transcript;
         const saveRes = await fetch("/api/save-transcript", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
