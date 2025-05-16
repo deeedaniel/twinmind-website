@@ -742,7 +742,11 @@ export default function CaptureClient() {
               <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-full max-w-md px-4 z-10">
                 {/* Transcript */}
                 {transcript && (
-                  <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd]">
+                  <div
+                    className={`bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] ${
+                      searchResult ? "mb-0" : "mb-12 mb:0"
+                    } sm:mb-0`}
+                  >
                     <div className="flex justify-between items-center">
                       <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
                         Live Transcript:
@@ -779,7 +783,7 @@ export default function CaptureClient() {
 
                 {/* AI Answer */}
                 {searchResult && !searchLoading && (
-                  <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] mb-8 md:mb-0">
+                  <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] mb-12 md:mb-0">
                     <div className="flex justify-between items-center">
                       <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
                         TwinMind Answer:
