@@ -94,6 +94,7 @@ export default function CaptureClient() {
   const [chatLoading, setChatLoading] = useState(false);
   const [showChatAnswer, setShowChatAnswer] = useState(false);
 
+  const [transcriptsLoading, setTranscriptsLoading] = useState(false);
   /*
   useEffect(() => {
     // Dynamically load the polyfill on client-side only
@@ -170,20 +171,27 @@ export default function CaptureClient() {
 
   // First, let's extract the fetch transcripts logic into a reusable function
   const fetchTranscripts = async () => {
-    const res = await fetch("/api/transcript");
-    const transcripts = await res.json();
-    setData(transcripts);
-    const groupedByDate = transcripts.reduce((acc: any, item: Transcript) => {
-      const date = new Date(item.createdAt).toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      });
-      acc[date] = acc[date] || [];
-      acc[date].push(item);
-      return acc;
-    }, {});
-    setGrouped(groupedByDate);
+    setTranscriptsLoading(true);
+    try {
+      const res = await fetch("/api/transcript");
+      const transcripts = await res.json();
+      setData(transcripts);
+      const groupedByDate = transcripts.reduce((acc: any, item: Transcript) => {
+        const date = new Date(item.createdAt).toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        });
+        acc[date] = acc[date] || [];
+        acc[date].push(item);
+        return acc;
+      }, {});
+      setGrouped(groupedByDate);
+    } catch (error) {
+      console.error("Error fetching transcripts:", error);
+    } finally {
+      setTranscriptsLoading(false);
+    }
   };
 
   // Update the useEffect to use this function
@@ -600,39 +608,48 @@ export default function CaptureClient() {
 
               {activeTab === "memories" && (
                 <div className="p-4 mb-24">
-                  {Object.entries(grouped).map(([date, entries]) => (
-                    <div key={date} className="mb-6 md:w-[600px] w-[300px]">
-                      <h2 className="text-lg font-bold text-[#646464]">
-                        {date}
-                      </h2>
-                      <div className="space-y-4 mt-2">
-                        {entries.map((entry) => (
-                          <div
-                            key={entry.id}
-                            className="cursor-pointer shadow-sm bg-white px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:translate-x-1"
-                            onClick={() => {
-                              setSelected(entry);
-                              setModalTab("summary");
-                            }}
-                          >
-                            <div className="flex gap-6 items-center">
-                              <div className="flex flex-col items-center w-8">
-                                <span className="text-sm text-gray-500">
-                                  {format(new Date(entry.createdAt), "h:mm")}
-                                </span>
-                                <span className="text-sm text-gray-500 uppercase">
-                                  {format(new Date(entry.createdAt), "aaa")}
-                                </span>
+                  {transcriptsLoading ? (
+                    <p>Fetching memories...</p>
+                  ) : (
+                    <>
+                      {Object.entries(grouped).map(([date, entries]) => (
+                        <div key={date} className="mb-6 md:w-[600px] w-[300px]">
+                          <h2 className="text-lg font-bold text-[#646464]">
+                            {date}
+                          </h2>
+                          <div className="space-y-4 mt-2">
+                            {entries.map((entry) => (
+                              <div
+                                key={entry.id}
+                                className="cursor-pointer shadow-sm bg-white px-4 py-2 rounded-lg hover:bg-gray-100 transition-all duration-300 hover:translate-x-1"
+                                onClick={() => {
+                                  setSelected(entry);
+                                  setModalTab("summary");
+                                }}
+                              >
+                                <div className="flex gap-6 items-center">
+                                  <div className="flex flex-col items-center w-8">
+                                    <span className="text-sm text-gray-500">
+                                      {format(
+                                        new Date(entry.createdAt),
+                                        "h:mm"
+                                      )}
+                                    </span>
+                                    <span className="text-sm text-gray-500 uppercase">
+                                      {format(new Date(entry.createdAt), "aaa")}
+                                    </span>
+                                  </div>
+                                  <span className="font-medium text-gray-800 truncate">
+                                    {entry.summary?.summaryTitle || "Untitled"}
+                                  </span>
+                                </div>
                               </div>
-                              <span className="font-medium text-gray-800 truncate">
-                                {entry.summary?.summaryTitle || "Untitled"}
-                              </span>
-                            </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                        </div>
+                      ))}
+                    </>
+                  )}
 
                   {/* Memory Page Modal */}
                   {selected && (
@@ -734,7 +751,7 @@ export default function CaptureClient() {
               {/* Calendar tab */}
               {activeTab === "calendar" && (
                 <div className="p-4 mb-24">
-                  {isCalendarLoading && <p>Loading calendar events...</p>}
+                  {isCalendarLoading && <p>Fetching calendar events...</p>}
                   {calendarError && (
                     <p className="text-red-500">{calendarError}</p>
                   )}
@@ -818,7 +835,7 @@ export default function CaptureClient() {
               {activeTab === "questions" && (
                 <div className="p-4 mb-24">
                   {loadingQuestions ? (
-                    <p>Loading questions...</p>
+                    <p>Fetching questions...</p>
                   ) : questions.length === 0 ? (
                     <p>No questions yet.</p>
                   ) : (
