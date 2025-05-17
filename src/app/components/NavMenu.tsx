@@ -216,7 +216,7 @@ export default function NavMenu() {
             <textarea
               value={personalization}
               onChange={(e) => setPersonalization(e.target.value)}
-              className="w-full border border-gray-300 rounded-md p-2 text-sm"
+              className="w-full border border-gray-300 rounded-md p-2"
               rows={4}
               placeholder="e.g. I'm a college student studying CS who loves productivity, journaling, and tech."
             />

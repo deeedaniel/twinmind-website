@@ -891,8 +891,8 @@ export default function CaptureClient() {
               </div>
             )}
             {/* Bottom controls */}
-            <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-md px-16 md:px-0 scale-125 md:scale-100">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-md px-16 md:px-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 scale-110 md:scale-100">
                 {/* Ask All Memories button */}
                 <div className="relative w-full">
                   <input
@@ -908,7 +908,7 @@ export default function CaptureClient() {
                       }
                     }}
                     placeholder="Ask All Memories"
-                    className="w-full pr-10 bg-[#e8edee] text-[#0b4f75] rounded-full px-3 py-2 text-sm sm:text-base font-semibold shadow-md border-2 border-[#c8d1dd] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0b4f75]"
+                    className="w-full pr-10 bg-[#e8edee] text-[#0b4f75] rounded-full px-3 py-2 font-semibold shadow-md border-2 border-[#c8d1dd] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0b4f75]"
                   />
                   <button
                     onClick={() => {
@@ -951,7 +951,7 @@ export default function CaptureClient() {
                       setChatResult("");
                       setShowAIAnswer(false);
                     }}
-                    className="flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-3 py-2 gap-2 text-sm sm:text-base font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
+                    className="flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-3 py-2 gap-2 font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
                   >
                     <Mic size={18} /> Capture
                   </button>
@@ -1069,7 +1069,7 @@ export default function CaptureClient() {
                     </div>
                     <div ref={transcriptEndRef} />
                   </div>
-                  <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-md px-16 md:px-0 scale-125 md:scale-100">
+                  <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-md px-16 md:px-0 scale-110 md:scale-100">
                     <div className="relative w-full">
                       <input
                         type="text"
@@ -1082,7 +1082,7 @@ export default function CaptureClient() {
                           }
                         }}
                         placeholder="Chat with Transcript"
-                        className="w-full pr-10 bg-[#e8edee] text-[#0b4f75] rounded-full px-3 py-2 text-sm sm:text-base font-semibold shadow-md border-2 border-[#c8d1dd] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0b4f75]"
+                        className="w-full pr-10 bg-[#e8edee] text-[#0b4f75] rounded-full px-3 py-2 font-semibold shadow-md border-2 border-[#c8d1dd] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#0b4f75]"
                       />
                       <button
                         onClick={() => {
