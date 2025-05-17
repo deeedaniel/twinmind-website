@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     },
     body: JSON.stringify({
       model: "text-embedding-ada-002",
-      input: text,
+      input: createdAt + "\n" + text,
     }),
   });
 

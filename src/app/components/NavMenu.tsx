@@ -263,14 +263,14 @@ export default function NavMenu() {
                   className="rounded-full"
                 />
               )}
-              <p className="text-md font-medium text-gray-500 flex w-full justify-between">
+              <div className="text-md font-medium text-gray-500 flex w-full justify-between">
                 <p className="text-black">Name:</p>
                 {session.user.name}
-              </p>
-              <p className="text-md text-gray-500 flex w-full justify-between">
+              </div>
+              <div className="text-md text-gray-500 flex w-full justify-between">
                 <p className="text-black">Email:</p>
                 {session.user.email}
-              </p>
+              </div>
               <button
                 onClick={async () => {
                   const confirmed = confirm(

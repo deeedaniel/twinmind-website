@@ -76,23 +76,25 @@ export default function CaptureClient() {
     Record<string, any[]>
   >({});
   const [selectedQuestion, setSelectedQuestion] = useState<any | null>(null);
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
 
-  // Live Memory Page
+  // Live Memory Modal
   const [liveMemoryOpen, setLiveMemoryOpen] = useState(false);
   const [customTitle, setCustomTitle] = useState("");
   const [customNotes, setCustomNotes] = useState("");
   const customTitleRef = useRef("");
   const customNotesRef = useRef("");
   const [memoryCreatedAt, setMemoryCreatedAt] = useState<Date | null>(null);
-
   const [summary, setSummary] = useState("");
   const [summaryTitle, setSummaryTitle] = useState("");
-
+  const transcriptRef = useRef<HTMLDivElement | null>(null);
+  // Chat for live memory modal
   const [chatQuery, setChatQuery] = useState("");
   const [chatResult, setChatResult] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [showChatAnswer, setShowChatAnswer] = useState(false);
 
+  /*
   useEffect(() => {
     // Dynamically load the polyfill on client-side only
     const loadPolyfill = async () => {
@@ -108,31 +110,39 @@ export default function CaptureClient() {
     };
     loadPolyfill();
   }, []);
+*/
 
   const fetchQuestions = async () => {
     console.log("Sending to summary:", {
       title: customTitle,
       notes: customNotes,
     });
+    setLoadingQuestions(true);
 
-    const res = await fetch("/api/question");
-    const data = await res.json();
-    setQuestions(data);
+    try {
+      const res = await fetch("/api/question");
+      const data = await res.json();
+      setQuestions(data);
 
-    // Group by date
-    const groupedByDate = data.reduce((acc: any, item: any) => {
-      const date = new Date(item.createdAt).toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      });
+      // Group by date
+      const groupedByDate = data.reduce((acc: any, item: any) => {
+        const date = new Date(item.createdAt).toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        });
 
-      acc[date] = acc[date] || [];
-      acc[date].push(item);
-      return acc;
-    }, {});
+        acc[date] = acc[date] || [];
+        acc[date].push(item);
+        return acc;
+      }, {});
 
-    setGroupedQuestions(groupedByDate);
+      setGroupedQuestions(groupedByDate);
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+    } finally {
+      setLoadingQuestions(false);
+    }
   };
 
   useEffect(() => {
@@ -157,14 +167,6 @@ export default function CaptureClient() {
 
   // Add this with other refs at the component level
   const chunkIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const transcriptEndRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (transcriptEndRef.current) {
-      transcriptEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [transcript]);
 
   // First, let's extract the fetch transcripts logic into a reusable function
   const fetchTranscripts = async () => {
@@ -548,6 +550,15 @@ export default function CaptureClient() {
     }
   };
 
+  useEffect(() => {
+    if (transcriptRef.current) {
+      transcriptRef.current.scrollTo({
+        top: transcriptRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [transcript]);
+
   return (
     <>
       <div className="min-h-screen">
@@ -798,7 +809,9 @@ export default function CaptureClient() {
 
               {activeTab === "questions" && (
                 <div className="p-4 mb-24">
-                  {questions.length === 0 ? (
+                  {loadingQuestions ? (
+                    <p>Loading questions...</p>
+                  ) : questions.length === 0 ? (
                     <p>No questions yet.</p>
                   ) : (
                     <ul className="space-y-4 max-w-[600px]">
@@ -992,7 +1005,7 @@ export default function CaptureClient() {
             {liveMemoryOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
                 <div ref={liveMemoryRef}>
-                  <div className="bg-white w-[600px] max-w-[100vw] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
+                  <div className="bg-white w-[600px] max-w-[100vw] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh]">
                     <div className="flex justify-between items-center">
                       <button
                         onClick={() => {
@@ -1071,7 +1084,10 @@ export default function CaptureClient() {
                       </button>
                     </div>
 
-                    <div className="max-h-100 overflow-y-auto pr-2 ">
+                    <div
+                      className="max-h-100 pr-2 overflow-y-auto"
+                      ref={transcriptRef}
+                    >
                       {modalTab === "summary" ? (
                         summary ? (
                           <p className="text-gray-800 whitespace-pre-wrap">
@@ -1094,12 +1110,11 @@ export default function CaptureClient() {
                           }}
                         />
                       ) : (
-                        <p className="text-gray-800 whitespace-pre-wrap">
+                        <div className="text-gray-800 whitespace-pre-wrap">
                           {transcript}
-                        </p>
+                        </div>
                       )}
                     </div>
-                    <div ref={transcriptEndRef} />
                   </div>
                   <div className="fixed bottom-14 left-1/2 -translate-x-1/2 w-full max-w-md px-16 md:px-0 scale-110 md:scale-100">
                     <div className="relative w-full">
