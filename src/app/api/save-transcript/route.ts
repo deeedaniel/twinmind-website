@@ -10,11 +10,13 @@ export async function POST(req: NextRequest) {
   if (!session || !session.user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { text } = await req.json();
+  const { text, createdAt } = await req.json();
   if (!text)
     return NextResponse.json({ error: "Missing text" }, { status: 400 });
 
   console.log("save-transcript", text);
+  console.log("🚀 [save-transcript] Received createdAt:", createdAt);
+  console.log("🚀 [save-transcript] Converted Date:", new Date(createdAt));
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
@@ -27,6 +29,7 @@ export async function POST(req: NextRequest) {
     data: {
       userId: user.id,
       text,
+      createdAt: createdAt ? new Date(createdAt) : new Date(),
     },
   });
 

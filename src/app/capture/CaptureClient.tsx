@@ -67,6 +67,7 @@ export default function CaptureClient() {
   const [showAIAnswer, setShowAIAnswer] = useState(false);
   const [personalization, setPersonalization] = useState("");
   const finalTranscriptRef = useRef<string>(""); // NEW
+  const memoryCreatedAtRef = useRef<Date | null>(null);
 
   // Questions
   const [questions, setQuestions] = useState([]);
@@ -81,6 +82,7 @@ export default function CaptureClient() {
   const [customNotes, setCustomNotes] = useState("");
   const customTitleRef = useRef("");
   const customNotesRef = useRef("");
+  const [memoryCreatedAt, setMemoryCreatedAt] = useState<Date | null>(null);
 
   const [summary, setSummary] = useState("");
   const [summaryTitle, setSummaryTitle] = useState("");
@@ -260,6 +262,7 @@ export default function CaptureClient() {
   // Start recording function
   const startRecording = async () => {
     // Clear any existing interval first
+    memoryCreatedAtRef.current = new Date();
 
     if (chunkIntervalRef.current) {
       clearInterval(chunkIntervalRef.current);
@@ -284,6 +287,8 @@ export default function CaptureClient() {
 
     mediaRecorder.onstop = async () => {
       // ✅ Reset everything, this makes is so transcript stays until a new recording starts
+      const date = new Date();
+      const timeStamp = date.toLocaleTimeString();
 
       const audioBlob = new Blob(audioChunksRef.current, {
         type: "audio/wav",
@@ -318,16 +323,21 @@ export default function CaptureClient() {
       if (shouldStopRef.current && finalTranscriptRef.current.trim()) {
         const cleanText = finalTranscriptRef.current.trim();
 
+        /*
         await fetch("/api/save-transcript", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: cleanText }),
         });
+        */
 
         const saveRes = await fetch("/api/save-transcript", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: cleanText }),
+          body: JSON.stringify({
+            text: cleanText,
+            createdAt: memoryCreatedAtRef.current?.toISOString(),
+          }),
         });
 
         const { transcriptId } = await saveRes.json();
@@ -937,6 +947,7 @@ export default function CaptureClient() {
                   <button
                     onClick={() => {
                       // Later uncomment this and  remove setIsRecording(true)
+                      setMemoryCreatedAt(new Date());
                       startRecording();
                       // setIsRecording(true);
                       setLiveMemoryOpen(true);
@@ -1002,7 +1013,9 @@ export default function CaptureClient() {
                         />
                       )}
                       <p className="text-sm text-[#909090] mb-4 font-semibold">
-                        {format(new Date(), "MMM d, yyyy '·' h:mm aaa")}
+                        {memoryCreatedAt
+                          ? format(memoryCreatedAt, "MMM d, yyyy '·' h:mm aaa")
+                          : format(new Date(), "MMM d, yyyy '·' h:mm aaa")}
                       </p>
                     </div>
 
