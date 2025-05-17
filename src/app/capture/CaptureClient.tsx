@@ -1009,7 +1009,7 @@ export default function CaptureClient() {
                 )}
               </div>
             </div>
-            '{/* Live Memory Modal */}
+            {/* Live Memory Modal */}
             {liveMemoryOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
                 <div ref={liveMemoryRef}>
