@@ -86,9 +86,10 @@ ${context}
 INSTRUCTIONS:
 1. Answer to the best ability based on information in the transcripts above and profile information.
 2. Do not explicity say you are basing your answer on the user's profile information.
-3. Do not make up information
-4. Be concise and direct in your answer
-5. If quoting from transcripts, indicate which part you're referencing
+3. Do not make up any information.
+4. Be concise and direct in your answer.
+5. If quoting from transcripts, indicate which part you're referencing.
+6. It is okay if you don't know.
 
 USER QUESTION: ${query}
 `;

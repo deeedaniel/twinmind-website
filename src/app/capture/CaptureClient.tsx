@@ -47,6 +47,7 @@ export default function CaptureClient() {
   const [transcript, setTranscript] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const audioRecorderRef = useRef<Blob[]>([]);
   // const [transcripts, setTranscripts] = useState<Transcript[]>([]);
   // const [isLoading, setIsLoading] = useState(true);
   // const [error, setError] = useState<string | null>(null);
@@ -287,12 +288,12 @@ export default function CaptureClient() {
 
     mediaRecorder.onstop = async () => {
       // ✅ Reset everything, this makes is so transcript stays until a new recording starts
-      const date = new Date();
-      const timeStamp = date.toLocaleTimeString();
 
       const audioBlob = new Blob(audioChunksRef.current, {
         type: "audio/wav",
       });
+
+      audioChunksRef.current = [];
 
       const formData = new FormData();
       formData.append("audio", audioBlob, "recording.wav");
@@ -311,17 +312,34 @@ export default function CaptureClient() {
       // Avoids blank space in the beginning for no reason
       // setTranscript((prev) => (prev ? prev + " " + fullText : fullText));
 
+      const date = new Date();
+      const timeStamp = date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      let num = 1;
+      console.log("Full text" + num + ": " + fullText);
+      num = num + 1;
+
       if (!shouldStopRef.current) {
-        finalTranscriptRef.current += " " + fullText;
-        setTranscript((prev) => (prev ? prev + " " + fullText : fullText));
+        finalTranscriptRef.current += timeStamp + "\n" + fullText + "\n\n";
+        setTranscript((prev) =>
+          prev
+            ? prev + timeStamp + "\n" + fullText + "\n\n"
+            : timeStamp + "\n" + fullText + "\n\n"
+        );
+        console.log("1: " + timeStamp);
       } else {
-        finalTranscriptRef.current = fullText;
-        setTranscript((prev) => (prev ? " " + fullText : fullText));
+        finalTranscriptRef.current += timeStamp + "\n" + fullText;
+        setTranscript((prev) => prev + timeStamp + "\n" + fullText);
+        console.log("2: " + timeStamp);
       }
 
       // ✅ Only save once if this was the final stop
       if (shouldStopRef.current && finalTranscriptRef.current.trim()) {
         const cleanText = finalTranscriptRef.current.trim();
+        const cleanText2 = transcript.trim();
 
         /*
         await fetch("/api/save-transcript", {
@@ -361,6 +379,7 @@ export default function CaptureClient() {
 
       // Restart recorder if not stopping
       if (!shouldStopRef.current) {
+        // audioChunksRef.current = []; // Clear right away
         mediaRecorderRef.current = new MediaRecorder(stream);
         mediaRecorderRef.current.ondataavailable =
           mediaRecorder.ondataavailable;
@@ -948,7 +967,7 @@ export default function CaptureClient() {
                     onClick={() => {
                       // Later uncomment this and  remove setIsRecording(true)
                       setMemoryCreatedAt(new Date());
-                      startRecording();
+                      setTranscript("");
                       // setIsRecording(true);
                       setLiveMemoryOpen(true);
                       setCustomTitle("");
@@ -956,11 +975,11 @@ export default function CaptureClient() {
                       customTitleRef.current = "";
                       customNotesRef.current = "";
                       finalTranscriptRef.current = "";
-                      setTranscript("");
                       setSummary("");
                       setSummaryTitle("");
                       setChatResult("");
                       setShowAIAnswer(false);
+                      startRecording();
                     }}
                     className="flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-3 py-2 gap-2 font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
                   >
