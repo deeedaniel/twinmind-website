@@ -308,7 +308,7 @@ export default function CaptureClient() {
 
       if (!shouldStopRef.current) {
         finalTranscriptRef.current += " " + fullText;
-        setTranscript((prev) => (prev ? prev + " " + fullText : fullText));
+        setTranscript((prev) => (prev ? " " + fullText : fullText));
       } else {
         finalTranscriptRef.current = fullText;
         setTranscript((prev) => (prev ? " " + fullText : fullText));
