@@ -325,11 +325,19 @@ export default function CaptureClient() {
       num = num + 1;
 
       if (!shouldStopRef.current) {
-        finalTranscriptRef.current += timeStamp + "\n" + fullText + "\n\n";
+        finalTranscriptRef.current +=
+          timeStamp + "\n" + fullText + "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
         setTranscript((prev) =>
           prev
-            ? prev + timeStamp + "\n" + fullText + "\n\n"
-            : timeStamp + "\n" + fullText + "\n\n"
+            ? prev +
+              timeStamp +
+              "\n" +
+              fullText +
+              "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            : timeStamp +
+              "\n" +
+              fullText +
+              "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         );
         console.log("1: " + timeStamp);
       } else {
@@ -1110,7 +1118,7 @@ export default function CaptureClient() {
                           }}
                         />
                       ) : (
-                        <div className="text-gray-800 whitespace-pre-wrap">
+                        <div className="text-gray-800 whitespace-pre-wrap overflow-x-hidden">
                           {transcript}
                         </div>
                       )}
