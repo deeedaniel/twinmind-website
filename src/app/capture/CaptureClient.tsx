@@ -10,6 +10,7 @@ import {
   ChevronUp,
   X,
   MessageCircleMore,
+  Circle,
 } from "lucide-react";
 import { format } from "date-fns";
 import AnimatedEllipsis from "../components/AnimatedEllipsis";
@@ -710,7 +711,10 @@ export default function CaptureClient() {
                               <ChevronLeft /> Back
                             </button>
                             <div className="flex items-center justify-center bg-[#f3f3f3] text-[#646464] rounded-full p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm  transition-all duration-300">
-                              {formatTime(selected.duration ?? 0)}
+                              <Circle size={15} className="fill-[#646464]" />
+                              <p className="w-12">
+                                {formatTime(selected.duration ?? 0)}
+                              </p>
                             </div>
                           </div>
 
@@ -1188,12 +1192,13 @@ export default function CaptureClient() {
                           }}
                           className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm cursor-pointer hover:scale-105 transition-all duration-300"
                         >
-                          <CircleStop size={30} />
+                          <CircleStop size={25} />
                           <p className="w-12">{formatTime(seconds)}</p>
                         </button>
                       ) : (
                         <div className="flex items-center justify-center bg-[#f3f3f3] text-[#646464] rounded-full p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm  transition-all duration-300">
-                          {formatTime(seconds)}
+                          <Circle size={15} className="fill-[#646464]" />
+                          <p className="w-12">{formatTime(seconds)}</p>
                         </div>
                       )}
                     </div>
