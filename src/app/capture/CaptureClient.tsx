@@ -759,7 +759,7 @@ export default function CaptureClient() {
                                   "No summary available."}
                               </p>
                             ) : (
-                              <p className="text-gray-800 whitespace-pre-wrap">
+                              <p className="text-gray-800 whitespace-pre-wrap overflow-x-hidden">
                                 {selected.text}
                               </p>
                             )}
