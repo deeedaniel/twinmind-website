@@ -562,12 +562,13 @@ export default function CaptureClient() {
 
       setChatResult(data.answer);
 
+      /*
       await fetch("/api/question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: searchQuery, answer: data.answer }),
       });
-
+      */
       await fetchQuestions();
     } catch (err) {
       console.error("Error chatting:", err);
