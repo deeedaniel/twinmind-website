@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   if (!session || !session.user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { text, createdAt } = await req.json();
+  const { text, createdAt, duration } = await req.json();
   if (!text)
     return NextResponse.json({ error: "Missing text" }, { status: 400 });
 
@@ -30,9 +30,11 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       text,
       createdAt: createdAt ? new Date(createdAt) : new Date(),
+      duration: duration ? duration : 0,
     },
   });
 
+  console.log("save-transcript duration: ", duration);
   // 2. Generate embedding
   const embeddingRes = await fetch("https://api.openai.com/v1/embeddings", {
     method: "POST",

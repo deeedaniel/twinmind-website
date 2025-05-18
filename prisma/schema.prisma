@@ -25,6 +25,7 @@ model Transcript {
   embedding Unsupported("vector")?
   summary   Summary?
   user      User                   @relation(fields: [userId], references: [id])
+  duration  Int?
 }
 
 model Summary {

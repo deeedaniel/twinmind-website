@@ -18,6 +18,7 @@ type Transcript = {
   text: string;
   createdAt: string;
   userId: string;
+  duration?: number;
   summary?: {
     id: string;
     summaryText: string;
@@ -88,6 +89,10 @@ export default function CaptureClient() {
   const [summary, setSummary] = useState("");
   const [summaryTitle, setSummaryTitle] = useState("");
   const transcriptRef = useRef<HTMLDivElement | null>(null);
+  const [seconds, setSeconds] = useState(0);
+  const durationRef = useRef(0);
+  const [timerActive, setTimerActive] = useState(false);
+
   // Chat for live memory modal
   const [chatQuery, setChatQuery] = useState("");
   const [chatResult, setChatResult] = useState("");
@@ -334,18 +339,21 @@ export default function CaptureClient() {
 
       if (!shouldStopRef.current) {
         finalTranscriptRef.current +=
-          timeStamp + "\n" + fullText + "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+          timeStamp +
+          "\n" +
+          fullText +
+          "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
         setTranscript((prev) =>
           prev
             ? prev +
               timeStamp +
               "\n" +
               fullText +
-              "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+              "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
             : timeStamp +
               "\n" +
               fullText +
-              "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+              "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         );
         console.log("1: " + timeStamp);
       } else {
@@ -373,6 +381,7 @@ export default function CaptureClient() {
           body: JSON.stringify({
             text: cleanText,
             createdAt: memoryCreatedAtRef.current?.toISOString(),
+            duration: durationRef.current,
           }),
         });
 
@@ -575,6 +584,30 @@ export default function CaptureClient() {
     }
   }, [transcript]);
 
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (timerActive) {
+      interval = setInterval(() => {
+        setSeconds((prev) => {
+          const newVal = prev + 1;
+          durationRef.current = newVal; // keep duration in sync
+          return newVal;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [timerActive]);
+
+  const formatTime = (secs: number) => {
+    const mins = Math.floor(secs / 60)
+      .toString()
+      .padStart(2, "0");
+    const secsLeft = (secs % 60).toString().padStart(2, "0");
+    return `${mins}:${secsLeft}`;
+  };
+
   return (
     <>
       <div className="min-h-screen">
@@ -642,6 +675,9 @@ export default function CaptureClient() {
                                   <span className="font-medium text-gray-800 truncate">
                                     {entry.summary?.summaryTitle || "Untitled"}
                                   </span>
+                                  <span className="text-gray-500 ml-auto">
+                                    {Math.floor((entry.duration ?? 0) / 60)}m
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -658,13 +694,16 @@ export default function CaptureClient() {
                         ref={modalRef}
                         className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto"
                       >
-                        <div>
+                        <div className="flex items-center justify-between">
                           <button
                             onClick={() => setSelected(null)}
                             className="text-[#4386a6] hover:underline cursor-pointer flex items-center gap-2 transition-all duration-300 hover:translate-x-1"
                           >
                             <ChevronLeft /> Back
                           </button>
+                          <div className="flex items-center justify-center bg-[#f3f3f3] text-[#646464] rounded-full p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm  transition-all duration-300">
+                            {formatTime(selected.duration ?? 0)}
+                          </div>
                         </div>
 
                         <div>
@@ -1017,7 +1056,9 @@ export default function CaptureClient() {
                       setSummaryTitle("");
                       setChatResult("");
                       setShowAIAnswer(false);
+                      setTimerActive(true);
                       startRecording();
+                      setSeconds(0);
                     }}
                     className="flex items-center justify-center bg-gradient-to-b from-[#1f587c] to-[#527a92] text-white rounded-full px-3 py-2 gap-2 font-semibold hover:scale-105 transition-all duration-300 shadow-md cursor-pointer"
                   >
@@ -1041,16 +1082,23 @@ export default function CaptureClient() {
                       >
                         <ChevronLeft /> Back
                       </button>
+
                       {isRecording ? (
                         <button
                           onClick={() => {
                             stopRecording();
+                            setTimerActive(false);
                           }}
-                          className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full p-2 gap-2 text-sm sm:text-base font-semibold shadow-md cursor-pointer hover:scale-105 transition-all duration-300"
+                          className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm cursor-pointer hover:scale-105 transition-all duration-300"
                         >
                           <CircleStop size={30} />
+                          <p className="w-12">{formatTime(seconds)}</p>
                         </button>
-                      ) : null}
+                      ) : (
+                        <div className="flex items-center justify-center bg-[#f3f3f3] text-[#646464] rounded-full p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm  transition-all duration-300">
+                          {formatTime(seconds)}
+                        </div>
+                      )}
                     </div>
                     <div>
                       {summaryTitle && !customTitle ? (
