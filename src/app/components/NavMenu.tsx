@@ -79,11 +79,11 @@ export default function NavMenu() {
             rel="noopener noreferrer"
           >
             <Image
-              src="/twinmind_black.png"
+              src="/twinmind.png"
               alt="TwinMind Logo"
               width={150}
               height={150}
-              className="mx-auto"
+              className="mx-auto translate-y-10"
             />
           </a>
 
