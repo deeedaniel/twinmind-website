@@ -121,10 +121,6 @@ export default function CaptureClient() {
 */
 
   const fetchQuestions = async () => {
-    console.log("Sending to summary:", {
-      title: customTitle,
-      notes: customNotes,
-    });
     setLoadingQuestions(true);
 
     try {
@@ -152,12 +148,6 @@ export default function CaptureClient() {
       setLoadingQuestions(false);
     }
   };
-
-  useEffect(() => {
-    if (activeTab === "questions") {
-      fetchQuestions();
-    }
-  }, [activeTab]);
 
   const shouldStopRef = useRef(false);
 
@@ -201,9 +191,10 @@ export default function CaptureClient() {
     }
   };
 
-  // Update the useEffect to use this function
+  // Fetch transcripts and questions right away
   useEffect(() => {
     fetchTranscripts();
+    fetchQuestions();
   }, []);
 
   // Calling api to fetch calendar events
@@ -512,7 +503,8 @@ export default function CaptureClient() {
 
   // Search function (Ask all Memories)
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim() || searchLoading) return;
+    console.log("Searching...");
 
     setSearchLoading(true);
     setShowAIAnswer(true);
@@ -531,11 +523,13 @@ export default function CaptureClient() {
 
       setSearchResult(data.answer);
 
+      /*
       await fetch("/api/question", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: searchQuery, answer: data.answer }),
       });
+      */
 
       await fetchQuestions();
     } catch (err) {
@@ -547,11 +541,12 @@ export default function CaptureClient() {
   };
 
   const handleChat = async (transcriptToUse: string) => {
-    if (!chatQuery.trim()) return;
+    if (!chatQuery.trim() || chatLoading) return;
 
     setChatLoading(true);
     setShowChatAnswer(true);
     setChatResult("");
+    console.log("Chatting...");
 
     try {
       const res = await fetch("/api/ask-live", {
@@ -572,6 +567,8 @@ export default function CaptureClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: searchQuery, answer: data.answer }),
       });
+
+      await fetchQuestions();
     } catch (err) {
       console.error("Error chatting:", err);
       setChatResult("Something went wrong. Please try again.");
