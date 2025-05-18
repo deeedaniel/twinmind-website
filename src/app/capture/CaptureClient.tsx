@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  MessageCircleMore,
 } from "lucide-react";
 import { format } from "date-fns";
 import AnimatedEllipsis from "../components/AnimatedEllipsis";
@@ -786,9 +787,9 @@ export default function CaptureClient() {
                                 setChatQuery("");
                               }}
                             >
-                              <Search
+                              <MessageCircleMore
                                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0b4f75] cursor-pointer"
-                                size={18}
+                                size={20}
                               />
                             </button>
                           </div>
@@ -1306,9 +1307,9 @@ export default function CaptureClient() {
                           setChatQuery("");
                         }}
                       >
-                        <Search
+                        <MessageCircleMore
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#0b4f75] cursor-pointer"
-                          size={18}
+                          size={20}
                         />
                       </button>
                     </div>
