@@ -617,7 +617,7 @@ export default function CaptureClient() {
     <>
       <div className="min-h-screen">
         {/* Tabs */}
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 bg-white z-10 shadow-sm rounded-xl">
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 bg-white z-10 shadow-md rounded-xl">
           <div className="w-[300px] md:w-[650px] mx-auto px-2 py-3 md:py-2">
             <div className="flex justify-center space-x-16 md:space-x-20 -translate-x-5 md:-translate-x-0">
               {["memories", "calendar", "questions"].map((tab) => (
