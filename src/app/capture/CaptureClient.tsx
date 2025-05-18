@@ -710,7 +710,7 @@ export default function CaptureClient() {
                             >
                               <ChevronLeft /> Back
                             </button>
-                            <div className="flex items-center justify-center bg-[#f3f3f3] text-[#646464] rounded-full p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm  transition-all duration-300">
+                            <div className="flex items-center justify-center bg-[#f3f3f3] text-[#646464] rounded-xl p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm  transition-all duration-300">
                               <Circle size={15} className="fill-[#646464]" />
                               <p className="w-12">
                                 {formatTime(selected.duration ?? 0)}
@@ -1190,13 +1190,13 @@ export default function CaptureClient() {
                             stopRecording();
                             setTimerActive(false);
                           }}
-                          className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-full p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm cursor-pointer hover:scale-105 transition-all duration-300"
+                          className="flex items-center justify-center bg-[#ffe7e8] text-[#ff585d] rounded-xl p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm cursor-pointer hover:scale-105 transition-all duration-300"
                         >
                           <CircleStop size={25} />
                           <p className="w-12">{formatTime(seconds)}</p>
                         </button>
                       ) : (
-                        <div className="flex items-center justify-center bg-[#f3f3f3] text-[#646464] rounded-full p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm  transition-all duration-300">
+                        <div className="flex items-center justify-center bg-[#f3f3f3] text-[#646464] rounded-xl p-2 px-3 gap-2 text-sm sm:text-base font-semibold shadow-sm  transition-all duration-300">
                           <Circle size={15} className="fill-[#646464]" />
                           <p className="w-12">{formatTime(seconds)}</p>
                         </div>
