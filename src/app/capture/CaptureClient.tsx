@@ -652,7 +652,10 @@ export default function CaptureClient() {
                   ) : (
                     <>
                       {Object.entries(grouped).map(([date, entries]) => (
-                        <div key={date} className="mb-6 md:w-[600px] w-[300px]">
+                        <div
+                          key={date}
+                          className="mb-6 md:w-[600px] w-[300px] max-w-[100vw]"
+                        >
                           <h2 className="text-lg font-bold text-[#646464]">
                             {date}
                           </h2>
@@ -697,7 +700,7 @@ export default function CaptureClient() {
                   {selected && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
                       <div ref={modalRef}>
-                        <div className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
+                        <div className="bg-white w-[600px] max-w-[100vw] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
                           <div className="flex items-center justify-between">
                             <button
                               onClick={() => setSelected(null)}
@@ -1041,7 +1044,7 @@ export default function CaptureClient() {
             {selectedQuestion && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
                 <div
-                  className="bg-white w-[600px] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto"
+                  className="bg-white w-[600px] max-w-[100vw] p-6 rounded-xl shadow-lg flex flex-col gap-4 max-h-[60vh] overflow-y-auto"
                   ref={questionModalRef}
                 >
                   <button
