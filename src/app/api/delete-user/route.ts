@@ -39,6 +39,11 @@ export async function DELETE(req: NextRequest) {
       where: { userId: user.id },
     });
 
+    // Delete questions
+    await prisma.question.deleteMany({
+      where: { userId: user.id },
+    });
+
     // Delete user
     await prisma.user.delete({
       where: { id: user.id },
