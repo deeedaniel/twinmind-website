@@ -11,7 +11,7 @@ import {
   X,
   MessageCircleMore,
   Circle,
-  Trash2,
+  Trash,
 } from "lucide-react";
 import { format } from "date-fns";
 import AnimatedEllipsis from "../components/AnimatedEllipsis";
@@ -719,7 +719,7 @@ export default function CaptureClient() {
                                 "p-1 px-2 rounded-lg cursor-pointer bg-red-400 transition-all duration-300 hover:text-black ml-auto items-center justify-center flex gap-2"
                               }
                             >
-                              <X size={20} />
+                              <Trash size={20} />
                               <p className="md:block hidden">Delete</p>
                             </button>
                           </div>
