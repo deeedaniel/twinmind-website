@@ -11,6 +11,7 @@ import {
   X,
   MessageCircleMore,
   Circle,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import AnimatedEllipsis from "../components/AnimatedEllipsis";
@@ -50,26 +51,20 @@ export default function CaptureClient() {
   const [transcript, setTranscript] = useState("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const audioRecorderRef = useRef<Blob[]>([]);
-  // const [transcripts, setTranscripts] = useState<Transcript[]>([]);
-  // const [isLoading, setIsLoading] = useState(true);
-  // const [error, setError] = useState<string | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isCalendarLoading, setIsCalendarLoading] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
   // const [summaries, setSummaries] = useState<Summary[]>([]);
   const [data, setData] = useState<Transcript[]>([]);
-  const [grouped, setGrouped] = useState<Record<string, Transcript[]>>({});
-  const [selected, setSelected] = useState<Transcript | null>(null);
+  const [grouped, setGrouped] = useState<Record<string, Transcript[]>>({}); // grouping memories by date
+  const [selected, setSelected] = useState<Transcript | null>(null); // selected memory
   const [modalTab, setModalTab] = useState<"summary" | "transcript" | "notes">(
     "summary"
   );
-  const [showFullTranscript, setShowFullTranscript] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
   const [showAIAnswer, setShowAIAnswer] = useState(false);
-  const [personalization, setPersonalization] = useState("");
   const finalTranscriptRef = useRef<string>(""); // NEW
   const memoryCreatedAtRef = useRef<Date | null>(null);
 
@@ -102,24 +97,158 @@ export default function CaptureClient() {
   const [showChatAnswer, setShowChatAnswer] = useState(false);
 
   const [transcriptsLoading, setTranscriptsLoading] = useState(false);
-  /*
-  useEffect(() => {
-    // Dynamically load the polyfill on client-side only
-    const loadPolyfill = async () => {
-      if (
-        typeof window !== "undefined" &&
-        typeof window.MediaRecorder === "undefined"
-      ) {
-        const { default: AudioRecorderPolyfill } = await import(
-          "audio-recorder-polyfill"
-        );
-        window.MediaRecorder = AudioRecorderPolyfill;
-      }
-    };
-    loadPolyfill();
-  }, []);
-*/
 
+  const shouldStopRef = useRef(false); // Should stop ref for audio recording
+  const modalRef = useRef<HTMLDivElement>(null); // Memory modal ref
+  const questionModalRef = useRef<HTMLDivElement>(null); // Question modal ref
+  const liveMemoryRef = useRef<HTMLDivElement>(null); // Live memory modal ref
+  const streamRef = useRef<MediaStream | null>(null); // Stream ref for audio recording
+  const chunkIntervalRef = useRef<NodeJS.Timeout | null>(null); // Interval ref for audio recording
+
+  // Fetch transcripts and questions right away
+  useEffect(() => {
+    fetchTranscripts();
+    fetchQuestions();
+  }, []);
+
+  // Fetching calendar events whenever user clicks on calendar tab
+  useEffect(() => {
+    if (activeTab === "calendar") {
+      const fetchEvents = async () => {
+        try {
+          setIsCalendarLoading(true);
+          setCalendarError(null);
+          const res = await fetch("/api/calendar");
+          if (!res.ok)
+            throw new Error(
+              "Failed to fetch calendar events. Please re-login!"
+            );
+          const data = await res.json();
+          setEvents(Array.isArray(data) ? data : []);
+        } catch (err) {
+          setCalendarError(
+            err instanceof Error ? err.message : "Failed to load events"
+          );
+          setEvents([]);
+        } finally {
+          setIsCalendarLoading(false);
+        }
+      };
+      fetchEvents();
+    }
+  }, [activeTab]);
+
+  // Close memory modal when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
+        setSelected(null); // close modal
+        setModalTab("summary");
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Close live memory modal when clicking outside
+  useEffect(() => {
+    function handleClickOutsideLiveMemory(event: MouseEvent) {
+      if (
+        liveMemoryRef.current &&
+        !liveMemoryRef.current.contains(event.target as Node)
+      ) {
+        setLiveMemoryOpen(false);
+      }
+    }
+
+    if (liveMemoryOpen) {
+      document.addEventListener("mousedown", handleClickOutsideLiveMemory);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideLiveMemory);
+    };
+  }, [liveMemoryOpen]);
+
+  // Close question modal when clicking outside
+  useEffect(() => {
+    function handleClickOutsideQuestion(event: MouseEvent) {
+      if (
+        questionModalRef.current &&
+        !questionModalRef.current.contains(event.target as Node)
+      ) {
+        setSelectedQuestion(null); // close the question modal
+      }
+    }
+
+    if (selectedQuestion) {
+      document.addEventListener("mousedown", handleClickOutsideQuestion);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideQuestion);
+    };
+  }, [selectedQuestion]);
+
+  // Automatically scroll to updated portion of transcript
+  useEffect(() => {
+    if (transcriptRef.current) {
+      transcriptRef.current.scrollTo({
+        top: transcriptRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [transcript]);
+
+  // Timer for live memory
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (timerActive) {
+      interval = setInterval(() => {
+        setSeconds((prev) => {
+          const newVal = prev + 1;
+          durationRef.current = newVal; // keep duration in sync
+          return newVal;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [timerActive]);
+
+  // Fetching transcripts
+  const fetchTranscripts = async () => {
+    setTranscriptsLoading(true);
+    try {
+      const res = await fetch("/api/transcript");
+      const transcripts = await res.json();
+      setData(transcripts);
+      const groupedByDate = transcripts.reduce((acc: any, item: Transcript) => {
+        const date = new Date(item.createdAt).toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        });
+        acc[date] = acc[date] || [];
+        acc[date].push(item);
+        return acc;
+      }, {});
+      setGrouped(groupedByDate);
+    } catch (error) {
+      console.error("Error fetching transcripts:", error);
+    } finally {
+      setTranscriptsLoading(false);
+    }
+  };
+
+  // Fetching questions
   const fetchQuestions = async () => {
     setLoadingQuestions(true);
 
@@ -149,81 +278,7 @@ export default function CaptureClient() {
     }
   };
 
-  const shouldStopRef = useRef(false);
-
-  // This is for when user clicks out of modals to exit it
-  const modalRef = useRef<HTMLDivElement>(null);
-
-  // This is for when user clicks out of question modals
-  const questionModalRef = useRef<HTMLDivElement>(null);
-
-  // This is for when user clicks out of live memory modal
-  const liveMemoryRef = useRef<HTMLDivElement>(null);
-
-  // Add streamRef at component level
-  const streamRef = useRef<MediaStream | null>(null);
-
-  // Add this with other refs at the component level
-  const chunkIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // First, let's extract the fetch transcripts logic into a reusable function
-  const fetchTranscripts = async () => {
-    setTranscriptsLoading(true);
-    try {
-      const res = await fetch("/api/transcript");
-      const transcripts = await res.json();
-      setData(transcripts);
-      const groupedByDate = transcripts.reduce((acc: any, item: Transcript) => {
-        const date = new Date(item.createdAt).toLocaleDateString("en-US", {
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-        });
-        acc[date] = acc[date] || [];
-        acc[date].push(item);
-        return acc;
-      }, {});
-      setGrouped(groupedByDate);
-    } catch (error) {
-      console.error("Error fetching transcripts:", error);
-    } finally {
-      setTranscriptsLoading(false);
-    }
-  };
-
-  // Fetch transcripts and questions right away
-  useEffect(() => {
-    fetchTranscripts();
-    fetchQuestions();
-  }, []);
-
-  // Calling api to fetch calendar events
-  useEffect(() => {
-    if (activeTab === "calendar") {
-      const fetchEvents = async () => {
-        try {
-          setIsCalendarLoading(true);
-          setCalendarError(null);
-          const res = await fetch("/api/calendar");
-          if (!res.ok)
-            throw new Error(
-              "Failed to fetch calendar events. Please re-login!"
-            );
-          const data = await res.json();
-          setEvents(Array.isArray(data) ? data : []);
-        } catch (err) {
-          setCalendarError(
-            err instanceof Error ? err.message : "Failed to load events"
-          );
-          setEvents([]);
-        } finally {
-          setIsCalendarLoading(false);
-        }
-      };
-      fetchEvents();
-    }
-  }, [activeTab]);
-
+  // Grouping events by date
   const groupedEvents = events.reduce((acc: any, event) => {
     const rawDate = event.start?.dateTime || event.start?.date;
     if (!rawDate) return acc;
@@ -238,35 +293,6 @@ export default function CaptureClient() {
     acc[date].push(event);
     return acc;
   }, {});
-
-  // Calling api to fetch summaries
-  /*
-  useEffect(() => {
-    const fetchSummaries = async () => {
-      try {
-        const res = await fetch("/api/transcript");
-        const transcripts = await res.json();
-
-        const summaries = transcripts
-          .filter((t: Transcript) => t.summary)
-          .map((t: Transcript) => ({
-            id: t.summary!.id,
-            text: t.summary!.summaryText,
-            title: t.summary!.summaryTitle,
-            createdAt: t.createdAt,
-          }));
-
-        setSummaries(summaries);
-      } catch (err) {
-        console.error("Error fetching summaries:", err);
-      }
-    };
-
-    if (activeTab === "summaries") {
-      fetchSummaries(); // only fetch when the tab is active
-    }
-  }, [activeTab]);
-  */
 
   // Start recording function
   const startRecording = async () => {
@@ -446,62 +472,7 @@ export default function CaptureClient() {
     setIsRecording(false);
   };
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
-      ) {
-        setSelected(null); // close modal
-        setModalTab("summary");
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutsideLiveMemory(event: MouseEvent) {
-      if (
-        liveMemoryRef.current &&
-        !liveMemoryRef.current.contains(event.target as Node)
-      ) {
-        setLiveMemoryOpen(false);
-      }
-    }
-
-    if (liveMemoryOpen) {
-      document.addEventListener("mousedown", handleClickOutsideLiveMemory);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutsideLiveMemory);
-    };
-  }, [liveMemoryOpen]);
-
-  useEffect(() => {
-    function handleClickOutsideQuestion(event: MouseEvent) {
-      if (
-        questionModalRef.current &&
-        !questionModalRef.current.contains(event.target as Node)
-      ) {
-        setSelectedQuestion(null); // close the question modal
-      }
-    }
-
-    if (selectedQuestion) {
-      document.addEventListener("mousedown", handleClickOutsideQuestion);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutsideQuestion);
-    };
-  }, [selectedQuestion]);
-
-  // Search function (Ask all Memories)
+  // Search function for asking all memories
   const handleSearch = async () => {
     if (!searchQuery.trim() || searchLoading) return;
     console.log("Searching...");
@@ -523,14 +494,6 @@ export default function CaptureClient() {
 
       setSearchResult(data.answer);
 
-      /*
-      await fetch("/api/question", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: searchQuery, answer: data.answer }),
-      });
-      */
-
       await fetchQuestions();
     } catch (err) {
       console.error("Error searching:", err);
@@ -540,6 +503,7 @@ export default function CaptureClient() {
     }
   };
 
+  // Chat function for asking live memory
   const handleChat = async (transcriptToUse: string) => {
     if (!chatQuery.trim() || chatLoading) return;
 
@@ -562,13 +526,6 @@ export default function CaptureClient() {
 
       setChatResult(data.answer);
 
-      /*
-      await fetch("/api/question", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: searchQuery, answer: data.answer }),
-      });
-      */
       await fetchQuestions();
     } catch (err) {
       console.error("Error chatting:", err);
@@ -578,31 +535,7 @@ export default function CaptureClient() {
     }
   };
 
-  useEffect(() => {
-    if (transcriptRef.current) {
-      transcriptRef.current.scrollTo({
-        top: transcriptRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
-  }, [transcript]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (timerActive) {
-      interval = setInterval(() => {
-        setSeconds((prev) => {
-          const newVal = prev + 1;
-          durationRef.current = newVal; // keep duration in sync
-          return newVal;
-        });
-      }, 1000);
-    }
-
-    return () => clearInterval(interval);
-  }, [timerActive]);
-
+  // Formatting seconds into minute:seconds
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60)
       .toString()
@@ -732,26 +665,62 @@ export default function CaptureClient() {
                           </div>
 
                           {/* Tabs */}
-                          <div className="flex mb-2 space-x-4">
+                          <div className="flex mb-2 ">
+                            <div className="flex space-x-4 ">
+                              <button
+                                onClick={() => setModalTab("summary")}
+                                className={`px-4 py-1 rounded-full  cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
+                                  modalTab === "summary"
+                                    ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                                    : "bg-[#eeeeee] text-[#656565]"
+                                }`}
+                              >
+                                Notes
+                              </button>
+                              <button
+                                onClick={() => setModalTab("transcript")}
+                                className={`px-4 py-1 rounded-full cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
+                                  modalTab === "transcript"
+                                    ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                                    : "bg-[#eeeeee] text-[#656565]"
+                                }`}
+                              >
+                                Transcript
+                              </button>
+                            </div>
+
                             <button
-                              onClick={() => setModalTab("summary")}
-                              className={`px-4 py-1 rounded-full  cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
-                                modalTab === "summary"
-                                  ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
-                                  : "bg-[#eeeeee] text-[#656565]"
-                              }`}
+                              onClick={async () => {
+                                if (!selected) return;
+
+                                const confirmed = window.confirm(
+                                  "Are you sure you want to delete this memory?"
+                                );
+                                if (!confirmed) return;
+
+                                const res = await fetch("/api/delete-memory", {
+                                  method: "DELETE",
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                  body: JSON.stringify({ id: selected.id }),
+                                });
+
+                                if (res.ok) {
+                                  // Refetch transcripts
+                                  await fetchTranscripts();
+                                  setSelected(null); // Close modal
+                                } else {
+                                  const { error } = await res.json();
+                                  alert("Failed to delete: " + error);
+                                }
+                              }}
+                              className={
+                                "p-1 px-2 rounded-lg cursor-pointer bg-red-400 transition-all duration-300 hover:text-black ml-auto items-center justify-center flex gap-2"
+                              }
                             >
-                              Notes
-                            </button>
-                            <button
-                              onClick={() => setModalTab("transcript")}
-                              className={`px-4 py-1 rounded-full cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
-                                modalTab === "transcript"
-                                  ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
-                                  : "bg-[#eeeeee] text-[#656565]"
-                              }`}
-                            >
-                              Transcript
+                              <X size={20} />
+                              <p className="md:block hidden">Delete</p>
                             </button>
                           </div>
 
