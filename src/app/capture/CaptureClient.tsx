@@ -722,7 +722,7 @@ export default function CaptureClient() {
                                 }
                               }}
                               className={
-                                "p-1 px-2 rounded-lg cursor-pointer bg-red-400 transition-all duration-300 hover:text-black ml-auto items-center justify-center flex gap-2"
+                                "p-1 px-2 rounded-lg cursor-pointer  transition-all duration-300 text-red-500 ml-auto items-center justify-center flex gap-2 hover:bg-red-100"
                               }
                             >
                               <Trash size={20} />
