@@ -772,6 +772,51 @@ export default function CaptureClient() {
                           </div>
                         </div>
                         <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-full max-w-md px-4 z-10">
+                          {chatLoading && (
+                            <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] translate-y-4 md:translate-y-0">
+                              <div className="flex justify-between items-center">
+                                <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
+                                  TwinMind Answer:
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() =>
+                                      setShowChatAnswer((prev) => !prev)
+                                    }
+                                    className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                                  >
+                                    {showChatAnswer ? (
+                                      <div className="flex items-center gap-1 cursor-pointer">
+                                        Minimize <ChevronDown size={16} />
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-1 cursor-pointer">
+                                        Expand <ChevronUp size={16} />
+                                      </div>
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => setChatResult("")}
+                                    className="hover:bg-[#c8d1dd] rounded-full p-1 duration-200 transition-all"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                              <div
+                                className={`${
+                                  showChatAnswer
+                                    ? "max-h-40 sm:max-h-60 mt-2"
+                                    : "max-h-0"
+                                } overflow-y-auto pr-1 transition-all duration-300`}
+                              >
+                                <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
+                                  Thinking
+                                  <AnimatedEllipsis />
+                                </p>
+                              </div>
+                            </div>
+                          )}
                           {chatResult && !chatLoading && (
                             <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] translate-y-4 md:translate-y-0">
                               <div className="flex justify-between items-center">
@@ -1068,6 +1113,13 @@ export default function CaptureClient() {
                 <p className="text-white  font-semibold truncate">
                   {customTitle || summaryTitle || "Untitled"}
                 </p>
+                <p className="text-[#757575] font-semibold truncate ml-auto bg-[#ffffff] rounded-xl px-3 py-1 flex items-center gap-1">
+                  <Circle
+                    size={14}
+                    className="fill-[#ff6c71] stroke-[#ff6c71]"
+                  />
+                  <p className="w-11">{formatTime(seconds)}</p>
+                </p>
               </div>
             )}
             {/* Bottom controls */}
@@ -1293,6 +1345,49 @@ export default function CaptureClient() {
                     </div>
                   </div>
                   <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-full max-w-md px-4 z-10">
+                    {chatLoading && (
+                      <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] translate-y-4 md:translate-y-0">
+                        <div className="flex justify-between items-center">
+                          <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
+                            TwinMind Answer:
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setShowChatAnswer((prev) => !prev)}
+                              className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                            >
+                              {showChatAnswer ? (
+                                <div className="flex items-center gap-1 cursor-pointer">
+                                  Minimize <ChevronDown size={16} />
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 cursor-pointer">
+                                  Expand <ChevronUp size={16} />
+                                </div>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setChatResult("")}
+                              className="hover:bg-[#c8d1dd] rounded-full p-1 duration-200 transition-all"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          className={`${
+                            showChatAnswer
+                              ? "max-h-40 sm:max-h-60 mt-2"
+                              : "max-h-0"
+                          } overflow-y-auto pr-1 transition-all duration-300`}
+                        >
+                          <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
+                            Thinking
+                            <AnimatedEllipsis />
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     {chatResult && !chatLoading && (
                       <div className="bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] translate-y-4 md:translate-y-0">
                         <div className="flex justify-between items-center">
@@ -1347,6 +1442,53 @@ export default function CaptureClient() {
             )}
             {/* TwinMind ask all memories results */}
             <div className="fixed bottom-32 left-1/2 -translate-x-1/2 flex flex-col gap-4 w-full max-w-md px-4 z-10">
+              {searchLoading && (
+                <div
+                  className={`bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] ${
+                    isRecording
+                      ? "-translate-y-28 md:-translate-y-12"
+                      : "-translate-y-12 md:-translate-y-0"
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <p className="font-bold text-sm sm:text-base text-[#0b4f75]">
+                      TwinMind Answer:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowAIAnswer((prev) => !prev)}
+                        className="text-xs sm:text-sm text-[#0b4f75] hover:underline focus:outline-none"
+                      >
+                        {showAIAnswer ? (
+                          <div className="flex items-center gap-1 cursor-pointer">
+                            Minimize <ChevronDown size={16} />
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 cursor-pointer">
+                            Expand <ChevronUp size={16} />
+                          </div>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setSearchResult("")}
+                        className="hover:bg-[#c8d1dd] rounded-full p-1 duration-200 transition-all"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    className={`${
+                      showAIAnswer ? "max-h-40 sm:max-h-60 mt-2" : "max-h-0"
+                    } overflow-y-auto pr-1 transition-all duration-300`}
+                  >
+                    <p className="text-xs sm:text-sm text-gray-800 whitespace-pre-wrap">
+                      Thinking
+                      <AnimatedEllipsis />
+                    </p>
+                  </div>
+                </div>
+              )}
               {searchResult && !searchLoading && (
                 <div
                   className={`bg-white rounded-xl shadow-lg p-3 sm:p-4 border border-[#c8d1dd] ${
