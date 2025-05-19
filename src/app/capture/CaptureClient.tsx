@@ -61,6 +61,7 @@ export default function CaptureClient() {
   const [modalTab, setModalTab] = useState<"summary" | "transcript" | "notes">(
     "summary"
   );
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState("");
   const [searchLoading, setSearchLoading] = useState(false);
@@ -107,8 +108,13 @@ export default function CaptureClient() {
 
   // Fetch transcripts and questions right away
   useEffect(() => {
-    fetchTranscripts();
-    fetchQuestions();
+    const fetchData = async () => {
+      setIsLoading(true);
+      await fetchTranscripts();
+      await fetchQuestions();
+      setIsLoading(false);
+    };
+    fetchData();
   }, []);
 
   // Fetching calendar events whenever user clicks on calendar tab
@@ -577,7 +583,7 @@ export default function CaptureClient() {
 
               {activeTab === "memories" && (
                 <div className="p-4 mb-24">
-                  {transcriptsLoading ? (
+                  {isLoading ? (
                     <p>
                       Fetching memories
                       <AnimatedEllipsis />
@@ -938,7 +944,7 @@ export default function CaptureClient() {
 
               {activeTab === "questions" && (
                 <div className="p-4 mb-24">
-                  {loadingQuestions ? (
+                  {isLoading ? (
                     <p>
                       Fetching questions
                       <AnimatedEllipsis />

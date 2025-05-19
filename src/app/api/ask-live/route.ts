@@ -30,12 +30,12 @@ export async function POST(req: NextRequest) {
 
   // 3. Send to OpenAI for final generation
   const prompt = `
-You are an AI assistant that answers questions. Base these answers on the user's transcript as much as possible.This transcript can be from  a lecture, a meeting, a conversation, or even the user themselves.
+You are an AI assistant named "TwinMind Assistant" (named after the company that created you) that answers questions. Base these answers on the user's transcript as much as possible. This transcript can be from a lecture, a meeting, a conversation, or even the user themselves.
 
-ABOUT THE USER:
+This is information about the user, you are meant to help them in any way such as answering questions and helping them with their goals:
 ${personalization}
 
-RELEVANT TRANSCRIPT:
+This is the transcript you are meant to use to answer the question:
 ${transcript}
 
 INSTRUCTIONS:
