@@ -9,6 +9,8 @@ import {
   LogOut,
   ChevronRight,
 } from "lucide-react";
+import { Switch } from "@headlessui/react";
+import { usePrivateMode } from "../context/PrivateModeContext";
 
 type Personalization = {
   id: string;
@@ -26,10 +28,19 @@ export default function NavMenu() {
   const manageRef = useRef<HTMLDivElement>(null);
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const { privateMode, setPrivateMode } = usePrivateMode();
 
-  {
-    /* Close modals when clicking outside */
-  }
+  /* Close modals when clicking outside */
+
+  useEffect(() => {
+    const fetchPrivateMode = async () => {
+      const res = await fetch("/api/private-mode");
+      const data = await res.json();
+      setPrivateMode(data.privateMode);
+    };
+    fetchPrivateMode();
+  }, []);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -51,6 +62,18 @@ export default function NavMenu() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const togglePrivateMode = async () => {
+    const res = await fetch("/api/private-mode", {
+      method: "POST",
+      body: JSON.stringify({ privateMode: !privateMode }),
+    });
+    if (res.ok) {
+      setPrivateMode(!privateMode);
+    } else {
+      alert("Failed to toggle private mode.");
+    }
+  };
 
   return (
     <>
@@ -135,6 +158,26 @@ export default function NavMenu() {
                 <p>Personalize</p>
                 <ChevronRight />
               </button>
+              <div className="flex items-center gap-2">
+                <p className="text-gray-400">Private Mode</p>
+                <Switch
+                  checked={privateMode}
+                  onChange={togglePrivateMode}
+                  className={`${
+                    privateMode ? "bg-[#ff7500]" : "bg-gray-300"
+                  } relative inline-flex h-6 w-11 items-center rounded-full ml-auto`}
+                >
+                  <span
+                    className={`${
+                      privateMode ? "translate-x-5" : "translate-x-1"
+                    } inline-block h-5 w-5 transform rounded-full bg-white transition shadow-lg`}
+                  />
+                </Switch>
+              </div>
+              <p className="text-xs text-gray-500">
+                Warning: Memories captured in Private Mode can't be recovered if
+                you lose your device.
+              </p>
             </div>
           </div>
 

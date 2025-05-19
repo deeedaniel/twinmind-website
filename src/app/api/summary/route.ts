@@ -14,20 +14,33 @@ export async function POST(req: NextRequest) {
   }
 
   // Taking in from frontend
-  const { transcriptId, title, notes } = await req.json();
+  const { transcriptId, title, notes, text } = await req.json();
 
   console.log("title", title);
   console.log("notes", notes);
 
-  const transcript = await prisma.transcript.findUnique({
-    where: { id: transcriptId },
-    include: { user: true },
-  });
+  let transcriptText: string | null = null;
 
-  if (!transcript) {
+  if (transcriptId) {
+    const transcript = await prisma.transcript.findUnique({
+      where: { id: transcriptId },
+      include: { user: true },
+    });
+
+    if (!transcript) {
+      return NextResponse.json(
+        { error: "Transcript not found" },
+        { status: 404 }
+      );
+    }
+
+    transcriptText = transcript.text;
+  } else if (text) {
+    transcriptText = text;
+  } else {
     return NextResponse.json(
-      { error: "Transcript not found" },
-      { status: 404 }
+      { error: "No transcript or text provided" },
+      { status: 400 }
     );
   }
 
@@ -40,7 +53,7 @@ User's Title: ${title || "Untitled"}
 User's Notes: ${notes || "None"}
 
 Transcript:
-"""${transcript.text}"""
+"""${transcriptText}"""
 
 Steps:
 1. Generate a short, relevant title (5–8 words). If the user provided a helpful title, you may reuse or refine it.
@@ -89,15 +102,18 @@ Action Items (if any):
     .join("\n") // join remaining lines back into text
     .trim(); // clean up whitespace
 
-  const saved = await prisma.summary.upsert({
-    where: { transcriptId },
-    update: { summaryText, summaryTitle },
-    create: {
-      transcriptId,
-      summaryText,
-      summaryTitle,
-    },
-  });
+  // Only save if private mode is OFF, aka no transcriptId from save-transcript
+  if (transcriptId) {
+    const saved = await prisma.summary.upsert({
+      where: { transcriptId },
+      update: { summaryText, summaryTitle },
+      create: {
+        transcriptId,
+        summaryText,
+        summaryTitle,
+      },
+    });
+  }
 
   return NextResponse.json({ summaryTitle, summaryText });
 }

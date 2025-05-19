@@ -15,6 +15,7 @@ model User {
   personalization String?
   transcripts     Transcript[]
   Question        Question[]
+  privateMode     Boolean      @default(false)
 }
 
 model Transcript {

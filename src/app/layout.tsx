@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { getServerSession } from "next-auth";
 import SessionProvider from "./components/SessionProvider";
+import { PrivateModeProvider } from "./context/PrivateModeContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -46,7 +47,9 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
-        <SessionProvider session={session}>{children}</SessionProvider>
+        <SessionProvider session={session}>
+          <PrivateModeProvider>{children}</PrivateModeProvider>
+        </SessionProvider>
       </body>
     </html>
   );

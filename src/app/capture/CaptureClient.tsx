@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import AnimatedEllipsis from "../components/AnimatedEllipsis";
+import { usePrivateMode } from "../context/PrivateModeContext";
 
 type Transcript = {
   id: string;
@@ -27,6 +28,10 @@ type Transcript = {
     summaryText: string;
     summaryTitle: string;
   };
+
+  // Local storage (private mode)
+  summaryTitle?: string;
+  summaryText?: string;
 };
 
 type CalendarEvent = {
@@ -106,6 +111,8 @@ export default function CaptureClient() {
   const streamRef = useRef<MediaStream | null>(null); // Stream ref for audio recording
   const chunkIntervalRef = useRef<NodeJS.Timeout | null>(null); // Interval ref for audio recording
 
+  const { privateMode } = usePrivateMode();
+
   // Fetch transcripts and questions right away
   useEffect(() => {
     const fetchData = async () => {
@@ -143,6 +150,12 @@ export default function CaptureClient() {
       fetchEvents();
     }
   }, [activeTab]);
+
+  // React context for global private mode
+  useEffect(() => {
+    console.log("clientcapture private mode changed to:", privateMode);
+    // now you can react to it or use it in conditionals
+  }, [privateMode]);
 
   // Close memory modal when clicking outside
   useEffect(() => {
@@ -232,20 +245,35 @@ export default function CaptureClient() {
   // Fetching transcripts
   const fetchTranscripts = async () => {
     setTranscriptsLoading(true);
+
     try {
+      // 1. Always get private (local) memories
+      const local = JSON.parse(localStorage.getItem("privateMemories") || "[]");
+
+      let combined: Transcript[] = [...local];
+
       const res = await fetch("/api/transcript");
-      const transcripts = await res.json();
-      setData(transcripts);
-      const groupedByDate = transcripts.reduce((acc: any, item: Transcript) => {
+      const serverData = await res.json();
+      combined = [...local, ...serverData];
+
+      combined.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      // 4. Group by date
+      const groupedByDate = combined.reduce((acc: any, item: Transcript) => {
         const date = new Date(item.createdAt).toLocaleDateString("en-US", {
           weekday: "short",
           month: "short",
           day: "numeric",
         });
+
         acc[date] = acc[date] || [];
         acc[date].push(item);
         return acc;
       }, {});
+
       setGrouped(groupedByDate);
     } catch (error) {
       console.error("Error fetching transcripts:", error);
@@ -390,35 +418,31 @@ export default function CaptureClient() {
       // ✅ Only save once if this was the final stop
       if (shouldStopRef.current && finalTranscriptRef.current.trim()) {
         const cleanText = finalTranscriptRef.current.trim();
-        const cleanText2 = transcript.trim();
 
-        /*
-        await fetch("/api/save-transcript", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: cleanText }),
-        });
-        */
+        let transcriptId: string | undefined;
 
-        const saveRes = await fetch("/api/save-transcript", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text: cleanText,
-            createdAt: memoryCreatedAtRef.current?.toISOString(),
-            duration: durationRef.current,
-          }),
-        });
-
-        const { transcriptId } = await saveRes.json();
+        if (!privateMode) {
+          const saveRes = await fetch("/api/save-transcript", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: cleanText,
+              createdAt: memoryCreatedAtRef.current?.toISOString(),
+              duration: durationRef.current,
+            }),
+          });
+          const res = await saveRes.json();
+          transcriptId = res.transcriptId;
+        }
 
         const summaryRes = await fetch("/api/summary", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            transcriptId,
+            transcriptId: transcriptId ?? undefined,
             title: customTitleRef.current.trim(),
             notes: customNotesRef.current.trim(),
+            text: cleanText,
           }),
         });
 
@@ -426,6 +450,23 @@ export default function CaptureClient() {
         setSummaryTitle(summaryTitle);
         setSummary(summaryText);
 
+        // Save to local storage if private mode
+        if (privateMode) {
+          const stored = JSON.parse(
+            localStorage.getItem("privateMemories") || "[]"
+          );
+
+          stored.push({
+            id: crypto.randomUUID(),
+            text: cleanText,
+            createdAt: new Date().toISOString(),
+            duration: durationRef.current,
+            summaryTitle: summaryTitle + " (Private)",
+            summaryText: summaryText,
+          });
+
+          localStorage.setItem("privateMemories", JSON.stringify(stored));
+        }
         await fetchTranscripts();
       }
 
@@ -621,7 +662,9 @@ export default function CaptureClient() {
                                     </span>
                                   </div>
                                   <span className="font-medium text-gray-800 truncate">
-                                    {entry.summary?.summaryTitle || "Untitled"}
+                                    {entry.summary?.summaryTitle ||
+                                      entry.summaryTitle ||
+                                      "Untitled"}
                                   </span>
                                   <span className="text-gray-500 ml-auto">
                                     {Math.floor((entry.duration ?? 0) / 60)}m
@@ -657,7 +700,9 @@ export default function CaptureClient() {
 
                           <div>
                             <h3 className="text-xl font-bold mb-2 text-[#0b4f75]">
-                              {selected.summary?.summaryTitle || "Untitled"}
+                              {selected.summary?.summaryTitle ||
+                                selected.summaryTitle ||
+                                "Untitled"}
                             </h3>
                             <p className="text-sm text-[#909090] mb-4 font-semibold">
                               {format(
@@ -734,6 +779,7 @@ export default function CaptureClient() {
                             {modalTab === "summary" ? (
                               <p className="text-gray-800 whitespace-pre-wrap">
                                 {selected.summary?.summaryText ||
+                                  selected.summaryText ||
                                   "No summary available."}
                               </p>
                             ) : (
