@@ -1110,6 +1110,7 @@ export default function CaptureClient() {
                 </ul>
                 */}
             </div>
+            {/* Question modal */}
             {selectedQuestion && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.5)]">
                 <div
@@ -1123,8 +1124,41 @@ export default function CaptureClient() {
                     <ChevronLeft /> Back
                   </button>
 
-                  <p className="text-lg md:text-2xl text-gray-800 whitespace-pre-wrap mt-2 font-bold">
+                  <p className="text-lg md:text-2xl text-gray-800 whitespace-pre-wrap mt-2 font-bold flex items-center">
                     {selectedQuestion.query}
+                    <button
+                      onClick={async () => {
+                        if (!selectedQuestion) return;
+
+                        const confirmed = window.confirm(
+                          "Are you sure you want to delete this question?"
+                        );
+                        if (!confirmed) return;
+
+                        const res = await fetch("/api/delete-question", {
+                          method: "DELETE",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({ id: selectedQuestion.id }),
+                        });
+
+                        if (res.ok) {
+                          // Refetch transcripts
+                          await fetchQuestions();
+                          setSelectedQuestion(null); // Close modal
+                        } else {
+                          const { error } = await res.json();
+                          alert("Failed to delete: " + error);
+                        }
+                      }}
+                      className={
+                        "p-1 px-2 rounded-lg cursor-pointer  transition-all duration-300 text-red-500 ml-auto items-center justify-center flex gap-2 hover:bg-red-100 font-normal text-base"
+                      }
+                    >
+                      <Trash size={20} />
+                      <p className="md:block hidden">Delete</p>
+                    </button>
                   </p>
 
                   <div>
