@@ -106,11 +106,12 @@ Action Items (if any):
   if (transcriptId) {
     const saved = await prisma.summary.upsert({
       where: { transcriptId },
-      update: { summaryText, summaryTitle },
+      update: { summaryText, summaryTitle, summaryNotes: notes },
       create: {
         transcriptId,
         summaryText,
         summaryTitle,
+        summaryNotes: notes,
       },
     });
   }

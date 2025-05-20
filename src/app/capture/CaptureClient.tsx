@@ -23,10 +23,12 @@ type Transcript = {
   createdAt: string;
   userId: string;
   duration?: number;
+  summaryNotes?: string;
   summary?: {
     id: string;
     summaryText: string;
     summaryTitle: string;
+    summaryNotes: string;
   };
 
   // Local storage (private mode)
@@ -463,6 +465,7 @@ export default function CaptureClient() {
             duration: durationRef.current,
             summaryTitle: summaryTitle + " (Private)",
             summaryText: summaryText,
+            summaryNotes: customNotesRef.current.trim(),
           });
 
           localStorage.setItem("privateMemories", JSON.stringify(stored));
@@ -726,6 +729,16 @@ export default function CaptureClient() {
                                     : "bg-[#eeeeee] text-[#656565]"
                                 }`}
                               >
+                                Summary
+                              </button>
+                              <button
+                                onClick={() => setModalTab("notes")}
+                                className={`px-4 py-1 rounded-full  cursor-pointer hover:bg-[#c5cfda] transition-all duration-300 hover:text-[#0b4f75] ${
+                                  modalTab === "notes"
+                                    ? "bg-[#c5cfda] text-[#0b4f75] font-semibold"
+                                    : "bg-[#eeeeee] text-[#656565]"
+                                }`}
+                              >
                                 Notes
                               </button>
                               <button
@@ -781,6 +794,12 @@ export default function CaptureClient() {
                                 {selected.summary?.summaryText ||
                                   selected.summaryText ||
                                   "No summary available."}
+                              </p>
+                            ) : modalTab === "notes" ? (
+                              <p className="text-gray-800 whitespace-pre-wrap overflow-x-hidden">
+                                {selected.summary?.summaryNotes ||
+                                  selected.summaryNotes ||
+                                  "No notes available."}
                               </p>
                             ) : (
                               <p className="text-gray-800 whitespace-pre-wrap overflow-x-hidden">

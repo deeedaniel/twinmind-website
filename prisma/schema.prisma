@@ -34,6 +34,7 @@ model Summary {
   transcriptId String     @unique
   summaryText  String
   summaryTitle String
+  summaryNotes String?
   createdAt    DateTime   @default(now())
   transcript   Transcript @relation(fields: [transcriptId], references: [id])
 }
