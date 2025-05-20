@@ -182,7 +182,7 @@ export default function NavMenu() {
           </div>
 
           {/* Support */}
-          <div className="md:translate-y-0 -translate-y-10">
+          <div className="md:translate-y-0 -translate-y-14">
             <p className="text-gray-300 mb-2 font-semibold">Support</p>
             <div className="flex flex-col gap-2 ml-5 w-48">
               <a
@@ -207,7 +207,7 @@ export default function NavMenu() {
           </div>
 
           {/* Other */}
-          <div className="md:translate-y-0 -translate-y-10">
+          <div className="md:translate-y-0 -translate-y-14">
             <p className="text-gray-300 mb-2 font-semibold">Other</p>
             <div className="flex flex-col gap-2 ml-5 w-48">
               <a
@@ -234,7 +234,7 @@ export default function NavMenu() {
           {/* Sign out */}
           <button
             onClick={() => signOut()}
-            className="mt-4 px-10 py-2 bg-[#ff454b] hover:bg-red-600 rounded-full flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer md:translate-y-0 -translate-y-10"
+            className="mt-4 px-10 py-2 bg-[#ff454b] hover:bg-red-600 rounded-full flex items-center justify-center gap-2 transition-all duration-300 cursor-pointer md:translate-y-0 -translate-y-14"
           >
             <LogOut />
             Sign out
