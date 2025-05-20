@@ -16,6 +16,8 @@ import {
 import { format } from "date-fns";
 import AnimatedEllipsis from "../components/AnimatedEllipsis";
 import { usePrivateMode } from "../context/PrivateModeContext";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Transcript = {
   id: string;
@@ -790,11 +792,20 @@ export default function CaptureClient() {
 
                           <div className="max-h-100 overflow-y-auto pr-2">
                             {modalTab === "summary" ? (
-                              <p className="text-gray-800 whitespace-pre-wrap">
+                              <ReactMarkdown
+                                /*
+                                children={
+                                  selected.summary?.summaryText ||
+                                  selected.summaryText ||
+                                  "No summary available."
+                                }
+                                  */
+                                remarkPlugins={[remarkGfm]}
+                              >
                                 {selected.summary?.summaryText ||
                                   selected.summaryText ||
                                   "No summary available."}
-                              </p>
+                              </ReactMarkdown>
                             ) : modalTab === "notes" ? (
                               <p className="text-gray-800 whitespace-pre-wrap overflow-x-hidden">
                                 {selected.summary?.summaryNotes ||
@@ -1389,9 +1400,10 @@ export default function CaptureClient() {
                     >
                       {modalTab === "summary" ? (
                         summary ? (
-                          <p className="text-gray-800 whitespace-pre-wrap">
-                            {summary}
-                          </p>
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            children={summary}
+                          />
                         ) : (
                           <p className="text-gray-800 whitespace-pre-wrap">
                             Transcribing in the background. When you stop the

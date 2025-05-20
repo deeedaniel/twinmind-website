@@ -59,20 +59,31 @@ Steps:
 1. Generate a short, relevant title (5–8 words). If the user provided a helpful title, you may reuse or refine it.
 2. Write clear, concise bullet point notes summarizing the key points or ideas from the transcript. Incorporate the user’s notes if relevant.
 3. Only include action items if the transcript or notes suggest next steps or priorities.
-4. If no meaningful content is found, return:
+4. Identify and output any **action items** as Markdown checkboxes (e.g., "- [ ] Do this"), except for the title.
+
+---
+
+### Output Format (Markdown):
+
+Title: [Generated or Refined Title]
+
+**Summary:**
+
++ Main point 1
++ Main point 2
+  + Sub-point (if applicable)
+
+**Action Items:**
+
+- [ ] First actionable item
+- [ ] Second actionable item
+
+---
+
+If no meaningful content is found, return:
 
 Title: Untitled  
 • Transcript is too short or has no meaningful content.
-
-Format:
-Title: [Generated or Refined Title]
-• Bullet point 1
-• Bullet point 2
-  • Sub-bullet (if needed)
-
-Action Items (if any):
-1. ...
-2. ...
 `;
 
   const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
