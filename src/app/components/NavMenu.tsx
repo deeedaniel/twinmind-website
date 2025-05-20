@@ -164,8 +164,10 @@ export default function NavMenu() {
                   checked={privateMode}
                   onChange={togglePrivateMode}
                   className={`${
-                    privateMode ? "bg-[#ff7500]" : "bg-gray-300"
-                  } relative inline-flex h-6 w-11 items-center rounded-full ml-auto`}
+                    privateMode
+                      ? "bg-[#ff7500] hover:bg-[#ff7700d8] "
+                      : "bg-gray-300 hover:bg-gray-400"
+                  } relative inline-flex h-6 w-11 items-center rounded-full ml-auto hover:bg-gray-400 transition-all duration-300 shadow-2xl`}
                 >
                   <span
                     className={`${
