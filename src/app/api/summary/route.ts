@@ -61,10 +61,6 @@ Steps:
 3. Only include action items if the transcript or notes suggest next steps or priorities.
 4. Identify and output any **action items** as Markdown checkboxes (e.g., "- [ ] Do this"), except for the title.
 
----
-
-### Output Format (Markdown):
-
 Title: [Generated or Refined Title]
 
 **Summary:**
@@ -77,8 +73,6 @@ Title: [Generated or Refined Title]
 
 - [ ] First actionable item
 - [ ] Second actionable item
-
----
 
 If no meaningful content is found, return:
 

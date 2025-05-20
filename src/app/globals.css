@@ -27,12 +27,3 @@ h6 {
 .font-bold {
   font-weight: 700;
 }
-
-.markdown-content ul {
-  list-style-type: disc;
-  padding-left: 2rem;
-}
-
-.markdown-content li {
-  display: list-item;
-}

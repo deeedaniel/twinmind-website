@@ -798,9 +798,26 @@ export default function CaptureClient() {
                                   selected.summary?.summaryText ||
                                   selected.summaryText ||
                                   "No summary available."
-                                }
+                                  }
                                   */
                                 remarkPlugins={[remarkGfm]}
+                                components={{
+                                  ul: ({ node, ...props }) => (
+                                    <ul
+                                      className="list-disc list-inside ml-2"
+                                      {...props}
+                                    />
+                                  ),
+                                  ol: ({ node, ...props }) => (
+                                    <ol
+                                      className="list-decimal list-inside ml-2"
+                                      {...props}
+                                    />
+                                  ),
+                                  li: ({ node, ...props }) => (
+                                    <li className="" {...props} />
+                                  ),
+                                }}
                               >
                                 {selected.summary?.summaryText ||
                                   selected.summaryText ||
@@ -1401,9 +1418,34 @@ export default function CaptureClient() {
                       {modalTab === "summary" ? (
                         summary ? (
                           <ReactMarkdown
+                            /*
+                                children={
+                                  selected.summary?.summaryText ||
+                                  selected.summaryText ||
+                                  "No summary available."
+                                  }
+                                  */
                             remarkPlugins={[remarkGfm]}
-                            children={summary}
-                          />
+                            components={{
+                              ul: ({ node, ...props }) => (
+                                <ul
+                                  className="list-disc list-inside ml-2"
+                                  {...props}
+                                />
+                              ),
+                              ol: ({ node, ...props }) => (
+                                <ol
+                                  className="list-decimal list-inside ml-2"
+                                  {...props}
+                                />
+                              ),
+                              li: ({ node, ...props }) => (
+                                <li className="" {...props} />
+                              ),
+                            }}
+                          >
+                            {summary}
+                          </ReactMarkdown>
                         ) : (
                           <p className="text-gray-800 whitespace-pre-wrap">
                             Transcribing in the background. When you stop the
