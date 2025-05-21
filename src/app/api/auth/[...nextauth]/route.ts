@@ -99,16 +99,17 @@ export const authOptions: NextAuthOptions = {
                 create: {
                   summaryTitle: "👋 Welcome to TwinMind!",
                   summaryText: `
-    • This is your first TwinMind memory.
-    • You can record audio and get a transcript along with asummary.
-    • Ask questions now or later based on your past transcripts!
-    
-    Action Items:
-    1. Try recording your own thought now.
-    2. Ask a question like "What is this transcript about?"
-    
-    P.S. (🤫 You can personalize your profile in the personalization in the sidebar.)
-                  `.trim(),
+This is your first TwinMind memory.
+
+- You can record audio and get a transcript along with a summary.
+- Ask questions now or later based on your past transcripts!
+
+**Action Items:**
+1. Try recording your own thought now.
+2. Ask a question like "What is this transcript about?"
+
+_P.S._ 🤫 You can personalize your profile in the **Personalization** tab in the sidebar.
+`,
                 },
               },
             },

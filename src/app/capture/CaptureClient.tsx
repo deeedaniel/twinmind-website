@@ -115,7 +115,18 @@ export default function CaptureClient() {
   const streamRef = useRef<MediaStream | null>(null); // Stream ref for audio recording
   const chunkIntervalRef = useRef<NodeJS.Timeout | null>(null); // Interval ref for audio recording
 
+  const [editableSummary, setEditableSummary] = useState(summary);
+  let checkboxIndex = 0;
+
   const { privateMode } = usePrivateMode();
+
+  useEffect(() => {
+    if (selected) {
+      const summaryText =
+        selected.summary?.summaryText || selected.summaryText || "";
+      setEditableSummary(summaryText);
+    }
+  }, [selected]);
 
   // Fetch transcripts and questions right away
   useEffect(() => {
@@ -596,6 +607,37 @@ export default function CaptureClient() {
     return `${mins}:${secsLeft}`;
   };
 
+  const isMarkdown = (text: string): boolean => {
+    return /[-*]\s|[0-9]+\.\s|\*\*|`|#{1,6}\s|_\w+_/.test(text);
+  };
+
+  const handleCheckboxToggle = (index: number) => {
+    const lines = editableSummary.split("\n");
+    let checkboxCount = -1;
+
+    const updated = lines.map((line) => {
+      if (line.match(/^\s*[-*] \[[ xX]\]/)) {
+        checkboxCount++;
+        if (checkboxCount === index) {
+          return line.includes("[x]") || line.includes("[X]")
+            ? line.replace("[x]", "[ ]").replace("[X]", "[ ]")
+            : line.replace("[ ]", "[x]");
+        }
+      }
+      return line;
+    });
+
+    const newSummary = updated.join("\n");
+    setEditableSummary(newSummary);
+
+    // OPTIONAL: Send update to DB
+    fetch("/api/update-summary", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ summary: newSummary }),
+    });
+  };
+
   return (
     <>
       <div className="min-h-screen">
@@ -793,35 +835,37 @@ export default function CaptureClient() {
                           <div className="max-h-100 overflow-y-auto pr-2">
                             {modalTab === "summary" ? (
                               <ReactMarkdown
-                                /*
-                                children={
-                                  selected.summary?.summaryText ||
-                                  selected.summaryText ||
-                                  "No summary available."
-                                  }
-                                  */
                                 remarkPlugins={[remarkGfm]}
                                 components={{
-                                  ul: ({ node, ...props }) => (
-                                    <ul
-                                      className="list-disc list-inside ml-2"
-                                      {...props}
-                                    />
-                                  ),
-                                  ol: ({ node, ...props }) => (
-                                    <ol
-                                      className="list-decimal list-inside ml-2"
-                                      {...props}
-                                    />
-                                  ),
-                                  li: ({ node, ...props }) => (
-                                    <li className="" {...props} />
-                                  ),
+                                  li: ({ node, children }) => {
+                                    const typedNode = node as any;
+
+                                    if (
+                                      typeof typedNode.checked === "boolean"
+                                    ) {
+                                      const currentIndex = checkboxIndex;
+                                      const checked = typedNode.checked;
+                                      checkboxIndex++;
+
+                                      return (
+                                        <li className="flex items-center gap-2">
+                                          <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={() =>
+                                              handleCheckboxToggle(currentIndex)
+                                            }
+                                          />
+                                          <span>{children}</span>
+                                        </li>
+                                      );
+                                    }
+
+                                    return <li>{children}</li>;
+                                  },
                                 }}
                               >
-                                {selected.summary?.summaryText ||
-                                  selected.summaryText ||
-                                  "No summary available."}
+                                {editableSummary}
                               </ReactMarkdown>
                             ) : modalTab === "notes" ? (
                               <p className="text-gray-800 whitespace-pre-wrap overflow-x-hidden">
@@ -1418,13 +1462,6 @@ export default function CaptureClient() {
                       {modalTab === "summary" ? (
                         summary ? (
                           <ReactMarkdown
-                            /*
-                                children={
-                                  selected.summary?.summaryText ||
-                                  selected.summaryText ||
-                                  "No summary available."
-                                  }
-                                  */
                             remarkPlugins={[remarkGfm]}
                             components={{
                               ul: ({ node, ...props }) => (
