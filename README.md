@@ -2,7 +2,8 @@
 
 A full-stack web recreation of the **TwinMind iOS app**, built as a take-home interview assignment using modern technologies. TwinMind allows users to record voice notes, transcribe them with AI, generate intelligent summaries, and interact with their memories through a conversational interface.
 
-Try it out!
+Try it here:
+
 🔗 [Live Demo](https://twinmind.vercel.app)
 
 ## ✨ Features
