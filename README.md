@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TwinMind Interview Assignment - Creating the iOS app on the Web 
 
-## Getting Started
+A full-stack web recreation of the **TwinMind iOS app**, built as a take-home interview assignment using modern technologies. TwinMind allows users to record voice notes, transcribe them with AI, generate intelligent summaries, and interact with their memories through a conversational interface.
 
-First, run the development server:
+Try it out!
+🔗 [Live Demo](https://twinmind.vercel.app)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- 🎙️ **Voice Journaling**  
+  Record audio through your microphone (or calls) and transcribe it using **Gemini Pro**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 🧾 **AI Summarization**  
+  Automatically generate high-quality summaries using **OpenAI GPT-4**.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 🗂️ **Memory Timeline**  
+  Browse and manage past recordings, transcripts, and AI summaries.
 
-## Learn More
+- 💬 **Memory Chat**  
+  Chat with individual memory entries using a **RAG (Retrieval-Augmented Generation)** model.
 
-To learn more about Next.js, take a look at the following resources:
+- 🧠 **Global Memory Chat**  
+  Query across all memories using a global RAG system powered by vector embeddings.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 🔐 **Authentication**  
+  Secure sign-in experience using **NextAuth.js**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠️ Tech Stack
 
-## Deploy on Vercel
+| Layer           | Technology                    |
+|------------------|-------------------------------|
+| Frontend         | Next.js (App Router), React, Tailwind CSS |
+| Backend / API    | Next.js API Routes             |
+| Authentication   | NextAuth.js                   |
+| Database         | Supabase PostgreSQL           |
+| Transcription    | Gemini Pro                    |
+| AI Summarization | OpenAI GPT                    |
+| Embeddings       | OpenAI Ada                    |
+| Vector Search    | RAG pipeline over Supabase    |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
