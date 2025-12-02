@@ -24,10 +24,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // or "gemini-1.5-flash"
+    // Updated to use the latest model as of late 2025
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Convert buffer to base64
     const audioBase64 = buffer.toString("base64");
+    const mimeType = audioBlob.type || "audio/wav";
 
     const response = await model.generateContent({
       contents: [
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
             },
             {
               inlineData: {
-                mimeType: "audio/wav",
+                mimeType: mimeType,
                 data: audioBase64,
               },
             },
