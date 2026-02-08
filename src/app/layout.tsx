@@ -4,6 +4,7 @@ import "./globals.css";
 import { getServerSession } from "next-auth";
 import SessionProvider from "./components/SessionProvider";
 import { PrivateModeProvider } from "./context/PrivateModeContext";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -50,6 +51,7 @@ export default async function RootLayout({
         <SessionProvider session={session}>
           <PrivateModeProvider>{children}</PrivateModeProvider>
         </SessionProvider>
+        <Analytics />
       </body>
     </html>
   );
